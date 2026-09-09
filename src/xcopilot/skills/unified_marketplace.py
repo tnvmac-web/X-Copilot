@@ -94,7 +94,7 @@ class GitHubSkillsSource(SkillSource):
                                     skills.append(skill)
                 elif response.status_code == 403:
                     print(f"GitHub API rate limited for {repo}. Using cached skills if available.")
-        except Exception as e:
+        except (httpx.HTTPError, ValueError, KeyError) as e:
             print(f"Error fetching skills from {repo}: {e}")
         return skills
 
@@ -121,7 +121,7 @@ class GitHubSkillsSource(SkillSource):
                 url=f"https://github.com/{repo}/tree/main/skills/{skill_name}",
                 metadata={"instructions": instructions, "frontmatter": frontmatter},
             )
-        except Exception:
+        except (yaml.YAMLError, ValueError, KeyError):
             return None
 
     async def search(self, query: str) -> list[MarketplaceSkill]:
@@ -231,7 +231,7 @@ class AnthropicCybersecuritySkillsSource(SkillSource):
                                     self._skills_cache.append(skill)
                 elif response.status_code == 403:
                     print(f"GitHub API rate limited for {self.REPO}. Using cached skills if available.")
-        except Exception as e:
+        except (httpx.HTTPError, ValueError, KeyError) as e:
             print(f"Error fetching cybersecurity skills: {e}")
 
         # Save cache
@@ -268,9 +268,8 @@ class AnthropicCybersecuritySkillsSource(SkillSource):
                         url=f"https://github.com/{self.REPO}/blob/main/{path}",
                         metadata={"instructions": parts[2].strip(), "frontmatter": frontmatter},
                     )
-        except Exception:
-            pass
-        return None
+        except (yaml.YAMLError, ValueError, KeyError):
+            return None
 
     async def install(self, skill_name: str, project_root: str) -> str | None:
         skill = next((s for s in self._skills_cache if s.name == skill_name), None)
@@ -337,7 +336,7 @@ class ScientificSkillsSource(SkillSource):
                                     self._skills_cache.append(skill)
                 elif response.status_code == 403:
                     print(f"GitHub API rate limited for {self.REPO}. Using cached skills if available.")
-        except Exception as e:
+        except (httpx.HTTPError, ValueError, KeyError) as e:
             print(f"Error fetching scientific skills: {e}")
 
         cache_data = [
@@ -372,9 +371,8 @@ class ScientificSkillsSource(SkillSource):
                         url=f"https://github.com/{self.REPO}/blob/main/{path}",
                         metadata={"instructions": parts[2].strip(), "frontmatter": frontmatter},
                     )
-        except Exception:
-            pass
-        return None
+        except (yaml.YAMLError, ValueError, KeyError):
+            return None
 
     async def install(self, skill_name: str, project_root: str) -> str | None:
         skill = next((s for s in self._skills_cache if s.name == skill_name), None)
@@ -674,15 +672,14 @@ class OpenVikingSkillsSource(SkillSource):
                 if response.status_code == 200:
                     tree = response.json()["tree"]
                     for item in tree:
-                        if "connector" in item["path"].lower() or "skill" in item["path"].lower():
-                            if item["path"].endswith((".yaml", ".yml", ".json")):
+                        if ("connector" in item["path"].lower() or "skill" in item["path"].lower()) and item["path"].endswith((".yaml", ".yml", ".json")):
                                 skill_url = f"https://raw.githubusercontent.com/{self.REPO}/main/{item['path']}"
                                 skill_resp = await client.get(skill_url)
                                 if skill_resp.status_code == 200:
                                     skill = self._parse_openviking(skill_resp.text, item["path"])
                                     if skill:
                                         self._skills_cache.append(skill)
-        except Exception as e:
+        except (httpx.HTTPError, ValueError, KeyError) as e:
             print(f"Error fetching OpenViking skills: {e}")
 
         cache_data = [
@@ -715,9 +712,8 @@ class OpenVikingSkillsSource(SkillSource):
                     url=f"https://github.com/{self.REPO}/blob/main/{path}",
                     metadata={"connector_config": data},
                 )
-        except Exception:
-            pass
-        return None
+        except (yaml.YAMLError, ValueError, KeyError):
+            return None
 
     async def install(self, skill_name: str, project_root: str) -> str | None:
         skill = next((s for s in self._skills_cache if s.name == skill_name), None)

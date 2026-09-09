@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import os
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
+
+import httpx
 
 from xcopilot.core.models import (
     ChatMessage,
@@ -48,8 +50,8 @@ class AnthropicProvider(ModelProviderBase):
         messages: list[ChatMessage],
         model: str,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        tools: Optional[list] = None,
+        max_tokens: int | None = None,
+        tools: list | None = None,
         stream: bool = False,
     ) -> ChatResponse | AsyncIterator[ChatResponse]:
         """Chat completion via Anthropic API."""
@@ -223,11 +225,11 @@ class AnthropicProvider(ModelProviderBase):
         if not self.api_key:
             return False
         try:
-            client = self._get_client()
+            self._get_client()
             # Anthropic doesn't have a simple health check endpoint
             # Just verify we can create a client
             return True
-        except Exception:
+        except (httpx.HTTPError, AttributeError):
             return False
 
 

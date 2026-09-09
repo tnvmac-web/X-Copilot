@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
 
 import httpx
 
@@ -47,8 +47,8 @@ class LMStudioProvider(ModelProviderBase):
         messages: list[ChatMessage],
         model: str,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        tools: Optional[list] = None,
+        max_tokens: int | None = None,
+        tools: list | None = None,
         stream: bool = False,
     ) -> ChatResponse | AsyncIterator[ChatResponse]:
         """Chat completion via LM Studio (OpenAI-compatible) API."""
@@ -174,7 +174,7 @@ class LMStudioProvider(ModelProviderBase):
 
             self._models_cache = models
             return models
-        except Exception:
+        except (httpx.HTTPError, ValueError):
             self._models_cache = []
             return []
 
@@ -184,7 +184,7 @@ class LMStudioProvider(ModelProviderBase):
             client = self._get_client()
             response = await client.get("/models", timeout=5.0)
             return response.status_code == 200
-        except Exception:
+        except (httpx.HTTPError, ValueError):
             return False
 
 

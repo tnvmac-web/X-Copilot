@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 from pathlib import Path
 
 import click
+import httpx
 from rich.console import Console
 from rich.table import Table
 
@@ -201,7 +201,7 @@ def model_chat(ctx, prompt, model, provider, temperature, max_tokens, stream):
                 console.print(response.content)
                 if response.usage:
                     console.print(f"\n[dim]Tokens: {response.usage}[/dim]")
-        except Exception as e:
+        except (httpx.HTTPError, ValueError, RuntimeError) as e:
             console.print(f"[red]Error: {e}[/red]")
 
     asyncio.run(_chat())
@@ -244,7 +244,7 @@ def model_test(ctx, model, provider):
             console.print(f"[dim]Model: {response.model}, Provider: {response.provider.value}[/dim]")
             if response.usage:
                 console.print(f"[dim]Usage: {response.usage}[/dim]")
-        except Exception as e:
+        except (httpx.HTTPError, ValueError, RuntimeError) as e:
             console.print(f"[red]✗[/red] Error: {e}")
 
     asyncio.run(_test())
@@ -379,7 +379,7 @@ def mcp_tools(ctx, server_name):
                 table.add_row(tool["name"], tool.get("description", ""), param_str)
 
             console.print(table)
-        except Exception as e:
+        except (httpx.HTTPError, ValueError, RuntimeError) as e:
             console.print(f"[red]Error: {e}[/red]")
         finally:
             await gateway.disconnect(server_name)
@@ -934,8 +934,6 @@ def init_project(ctx, name, template):
 @click.pass_context
 def init_config(ctx, global_flag):
     """Initialize configuration file."""
-    from xcopilot.core.planner import PlannerEngine
-    from xcopilot.memory import MemoryEngine
 
     project_root = ctx.obj.get("project_root", Path.cwd())
 
@@ -944,8 +942,7 @@ def init_config(ctx, global_flag):
     else:
         config_path = project_root / ".xcopilot" / "config.json"
 
-    if config_path.exists():
-        if not click.confirm(f"Config exists at {config_path}. Overwrite?"):
+    if config_path.exists() and not click.confirm(f"Config exists at {config_path}. Overwrite?"):
             return
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1015,11 +1012,11 @@ def doctor(ctx):
     # Check memory
     from xcopilot.memory import MemoryEngine
     memory = MemoryEngine(project_root=str(Path.cwd()))
-    console.print(f"\n[bold]Memory:[/bold]")
+    console.print("\n[bold]Memory:[/bold]")
     console.print(f"  Session: {len(memory.session._data)} items")
     console.print(f"  Episodic: {memory.episodic.db_path.exists() and '✓' or '✗'}")
     console.print(f"  Semantic: {memory.semantic.persist_dir.exists() and '✓' or '✗'}")
-    console.print(f"  Procedural: ✓ (skills dir)")
+    console.print("  Procedural: ✓ (skills dir)")
     console.print(f"  Project: {memory.project._find_agents_files() and '✓' or '✗'}")
 
     console.print("\n[green]Diagnostics complete![/green]")
@@ -1027,15 +1024,15 @@ def doctor(ctx):
 
 # Export all command groups
 __all__ = [
-    "memory",
-    "skills",
     "checkpoints",
-    "graph",
-    "update",
     "config",
-    "model",
-    "mcp",
-    "skill",
-    "init",
     "doctor",
+    "graph",
+    "init",
+    "mcp",
+    "memory",
+    "model",
+    "skill",
+    "skills",
+    "update",
 ]

@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import os
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
+
+import openai
 
 from xcopilot.core.models import (
     ChatMessage,
@@ -13,7 +15,6 @@ from xcopilot.core.models import (
     ModelInfo,
     ModelProvider,
     ModelProviderBase,
-    ProviderRegistry,
     registry,
 )
 
@@ -51,8 +52,8 @@ class OpenAIProvider(ModelProviderBase):
         messages: list[ChatMessage],
         model: str,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        tools: Optional[list] = None,
+        max_tokens: int | None = None,
+        tools: list | None = None,
         stream: bool = False,
     ) -> ChatResponse | AsyncIterator[ChatResponse]:
         """Chat completion via OpenAI API."""
@@ -240,7 +241,7 @@ class OpenAIProvider(ModelProviderBase):
             client = self._get_client()
             await client.models.list()
             return True
-        except Exception:
+        except (openai.APIError, openai.APIConnectionError):
             return False
 
 

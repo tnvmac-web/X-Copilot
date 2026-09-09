@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
 
 import httpx
 
@@ -53,8 +53,8 @@ class OpenRouterProvider(ModelProviderBase):
         messages: list[ChatMessage],
         model: str,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        tools: Optional[list] = None,
+        max_tokens: int | None = None,
+        tools: list | None = None,
         stream: bool = False,
     ) -> ChatResponse | AsyncIterator[ChatResponse]:
         """Chat completion via OpenRouter API."""
@@ -211,7 +211,7 @@ class OpenRouterProvider(ModelProviderBase):
 
             self._models_cache = models
             return models
-        except Exception as e:
+        except (httpx.HTTPError, ValueError) as e:
             print(f"Failed to fetch OpenRouter models: {e}")
             self._models_cache = []
             return []
@@ -224,7 +224,7 @@ class OpenRouterProvider(ModelProviderBase):
             client = self._get_client()
             response = await client.get("/models", timeout=10.0)
             return response.status_code == 200
-        except Exception:
+        except (httpx.HTTPError, ValueError):
             return False
 
 

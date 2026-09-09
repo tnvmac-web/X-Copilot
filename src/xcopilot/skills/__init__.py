@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from xcopilot.skills.marketplace import MarketplaceSkill, SkillsMarketplace
-from xcopilot.skills.unified_marketplace import MarketplaceSkill as UnifiedMarketplaceSkill, UnifiedMarketplace, unified_marketplace
+from xcopilot.skills.unified_marketplace import (
+    MarketplaceSkill as UnifiedMarketplaceSkill,
+)
+from xcopilot.skills.unified_marketplace import (
+    UnifiedMarketplace,
+    unified_marketplace,
+)
 
 __all__ = [
     "MarketplaceSkill",
     "SkillsMarketplace",
-    "UnifiedMarketplaceSkill",
     "UnifiedMarketplace",
+    "UnifiedMarketplaceSkill",
     "unified_marketplace",
 ]

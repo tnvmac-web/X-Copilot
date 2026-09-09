@@ -7,7 +7,6 @@ import json
 import os
 import subprocess
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
 import httpx
@@ -85,14 +84,13 @@ class MCPGateway:
                 env.update(config.env)
 
             args = config.args or []
-            self._processes[name] = subprocess.Popen(
-                [config.command] + args,
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+            self._processes[name] = await asyncio.create_subprocess_exec(
+                config.command,
+                *args,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
                 env=env,
-                text=True,
-                bufsize=1,
             )
 
             # Initialize MCP connection
@@ -114,7 +112,7 @@ class MCPGateway:
             })
 
             return True
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as e:
             print(f"Failed to connect to MCP server {name}: {e}")
             return False
 
@@ -141,7 +139,7 @@ class MCPGateway:
             response.raise_for_status()
 
             return True
-        except Exception as e:
+        except (httpx.HTTPError, json.JSONDecodeError) as e:
             print(f"Failed to connect to MCP server {name} via SSE: {e}")
             return False
 

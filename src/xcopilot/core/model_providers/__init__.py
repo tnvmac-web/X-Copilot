@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from xcopilot.core.model_providers.openai_provider import register_openai
 from xcopilot.core.model_providers.anthropic_provider import register_anthropic
-from xcopilot.core.model_providers.ollama_provider import register_ollama
 from xcopilot.core.model_providers.lmstudio_provider import register_lmstudio
+from xcopilot.core.model_providers.ollama_provider import register_ollama
+from xcopilot.core.model_providers.openai_provider import register_openai
 from xcopilot.core.model_providers.openrouter_provider import register_openrouter
 
 __all__ = [
-    "register_openai",
     "register_anthropic",
-    "register_ollama",
     "register_lmstudio",
+    "register_ollama",
+    "register_openai",
     "register_openrouter",
 ]
 
@@ -41,5 +41,5 @@ def register_all_providers(config: dict | None = None) -> None:
         if loop.is_running():
             # Can't run async here, will be checked on first use
             pass
-    except Exception:
+    except (RuntimeError, AttributeError):
         pass

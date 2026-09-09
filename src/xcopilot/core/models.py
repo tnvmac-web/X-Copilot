@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import AsyncIterator, Optional
-import json
+
+import httpx
 
 
 class ModelProvider(Enum):
@@ -52,9 +53,9 @@ class ChatMessage:
     """Chat message."""
     role: str  # system, user, assistant, tool
     content: str
-    name: Optional[str] = None
-    tool_calls: Optional[list] = None
-    tool_call_id: Optional[str] = None
+    name: str | None = None
+    tool_calls: list | None = None
+    tool_call_id: str | None = None
 
 
 @dataclass
@@ -65,8 +66,8 @@ class ChatResponse:
     provider: ModelProvider
     usage: dict = field(default_factory=dict)  # prompt_tokens, completion_tokens, total_tokens
     finish_reason: str = "stop"
-    tool_calls: Optional[list] = None
-    raw_response: Optional[dict] = None
+    tool_calls: list | None = None
+    raw_response: dict | None = None
 
 
 @dataclass
@@ -96,8 +97,8 @@ class ModelProviderBase(ABC):
         messages: list[ChatMessage],
         model: str,
         temperature: float = 0.7,
-        max_tokens: Optional[int] = None,
-        tools: Optional[list] = None,
+        max_tokens: int | None = None,
+        tools: list | None = None,
         stream: bool = False,
     ) -> ChatResponse | AsyncIterator[ChatResponse]:
         """Chat completion."""
@@ -134,7 +135,7 @@ class ProviderRegistry:
 
     def __init__(self):
         self._providers: dict[ModelProvider, ModelProviderBase] = {}
-        self._default_provider: Optional[ModelProvider] = None
+        self._default_provider: ModelProvider | None = None
         self._fallback_chain: list[ModelProvider] = []
 
     def register(self, provider: ModelProviderBase) -> None:
@@ -145,7 +146,7 @@ class ProviderRegistry:
         """Unregister a provider."""
         self._providers.pop(provider_type, None)
 
-    def get(self, provider_type: ModelProvider) -> Optional[ModelProviderBase]:
+    def get(self, provider_type: ModelProvider) -> ModelProviderBase | None:
         """Get a provider by type."""
         return self._providers.get(provider_type)
 
@@ -158,7 +159,7 @@ class ProviderRegistry:
         """Set fallback chain."""
         self._fallback_chain = [p for p in chain if p in self._providers]
 
-    def get_default(self) -> Optional[ModelProviderBase]:
+    def get_default(self) -> ModelProviderBase | None:
         """Get default provider."""
         if self._default_provider:
             return self._providers.get(self._default_provider)
@@ -188,7 +189,7 @@ class ProviderRegistry:
                 models = await provider.list_models()
                 if any(m.id == model for m in models):
                     return await provider.chat(messages, model, **kwargs)
-            except Exception as e:
+            except (httpx.HTTPError, ValueError, RuntimeError) as e:
                 last_error = e
                 continue
 
@@ -200,7 +201,7 @@ class ProviderRegistry:
         for provider_type, provider in self._providers.items():
             try:
                 result[provider_type] = await provider.list_models()
-            except Exception:
+            except (httpx.HTTPError, ValueError):
                 result[provider_type] = []
         return result
 
