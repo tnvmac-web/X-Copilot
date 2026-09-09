@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 
-from xcopilot.tools.shell import ShellTool
+from xcopilot.permission.pipeline import PermissionMode, PermissionPipeline
 from xcopilot.tools.file import FileTool
 from xcopilot.tools.search import SearchTool
+from xcopilot.tools.shell import ShellTool
 from xcopilot.tools.web import WebTool
-from xcopilot.permission.pipeline import PermissionPipeline, PermissionMode
 
 
 @pytest.fixture

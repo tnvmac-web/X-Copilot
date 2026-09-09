@@ -6,9 +6,6 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
-
-import requests
 
 
 @dataclass
@@ -34,7 +31,7 @@ class SkillsMarketplace:
         "voltagent/awesome-agent-skills",
     ]
 
-    def __init__(self, cache_dir: Optional[str] = None) -> None:
+    def __init__(self, cache_dir: str | None = None) -> None:
         self.cache_dir = Path(cache_dir or "~/.xcopilot/marketplace").expanduser()
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._cache_file = self.cache_dir / "skills_cache.json"
@@ -76,7 +73,7 @@ class SkillsMarketplace:
         ]
         return [s for s in mock_skills if query.lower() in s.name.lower() or query.lower() in s.description.lower()]
 
-    def install(self, repo: str, skill_name: str, project_root: str) -> Optional[str]:
+    def install(self, repo: str, skill_name: str, project_root: str) -> str | None:
         """Install a skill from marketplace to project."""
         # In real implementation: fetch from GitHub, write SKILL.md
         project_path = Path(project_root)
@@ -114,7 +111,6 @@ Refer to: https://github.com/{repo}/tree/main/skills/{skill_name}
 
     def import_skills(self, json_data: str) -> None:
         """Import skills from JSON."""
-        pass
 
     def clear_cache(self) -> None:
         """Clear local cache."""

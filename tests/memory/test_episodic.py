@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 import json
-import tempfile
-from pathlib import Path
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import pytest
 
-from xcopilot.memory.episodic import EpisodicMemory, EpisodicEvent
+from xcopilot.memory.episodic import EpisodicEvent, EpisodicMemory
 
 
 @pytest.fixture

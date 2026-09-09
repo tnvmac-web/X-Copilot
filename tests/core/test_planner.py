@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from xcopilot.core.planner import TasteProfile, PlannerEngine
+from xcopilot.core.planner import PlannerEngine, TasteProfile
 from xcopilot.memory import MemoryEngine
 
 

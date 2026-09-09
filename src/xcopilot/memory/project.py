@@ -5,10 +5,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
-from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 
 @dataclass
@@ -26,7 +25,7 @@ class ProjectRule:
 class _AGENTSFileHandler(FileSystemEventHandler):
     """Watchdog handler for AGENTS.md changes."""
 
-    def __init__(self, memory: "ProjectMemory") -> None:
+    def __init__(self, memory: ProjectMemory) -> None:
         self.memory = memory
 
     def on_modified(self, event) -> None:
@@ -40,8 +39,8 @@ class ProjectMemory:
     def __init__(self, project_root: str) -> None:
         self.project_root = Path(project_root)
         self.sections: dict[str, ProjectRule] = {}
-        self._watcher: Optional[Observer] = None
-        self._handler: Optional[_AGENTSFileHandler] = None
+        self._watcher: Observer | None = None
+        self._handler: _AGENTSFileHandler | None = None
 
     def _find_agents_files(self) -> list[Path]:
         """Find all AGENTS.md files in project root and .xcopilot/."""
@@ -112,7 +111,7 @@ class ProjectMemory:
             for rule in rules:
                 self.sections[rule.title] = rule
 
-    def get_rule(self, title: str) -> Optional[ProjectRule]:
+    def get_rule(self, title: str) -> ProjectRule | None:
         """Get a rule by section title."""
         return self.sections.get(title)
 

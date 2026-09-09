@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
-from typing import Optional
 
 import yaml
 from pydantic import BaseModel, Field
@@ -24,7 +22,7 @@ class SkillData(BaseModel):
 class ProceduralMemory:
     """Loads, discovers, and creates SKILL.md files from project and global directories."""
 
-    def __init__(self, project_root: Optional[str] = None) -> None:
+    def __init__(self, project_root: str | None = None) -> None:
         self.project_root = Path(project_root) if project_root else Path.cwd()
         self.global_skills_dir = Path.home() / ".xcopilot" / "skills"
 
@@ -97,8 +95,8 @@ class ProceduralMemory:
         name: str,
         description: str,
         instructions: str,
-        triggers: Optional[list[str]] = None,
-        compatible_agents: Optional[list[str]] = None,
+        triggers: list[str] | None = None,
+        compatible_agents: list[str] | None = None,
     ) -> str:
         """Create a new SKILL.md file in the project skills directory."""
         triggers = triggers or []

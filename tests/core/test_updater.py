@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from xcopilot.core.updater import Updater, UpdateInfo
+from xcopilot.core.updater import UpdateInfo, Updater
 
 
 @pytest.fixture

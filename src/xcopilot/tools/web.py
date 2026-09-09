@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from xcopilot.permission.pipeline import PermissionAction, PermissionResult
 
@@ -48,8 +47,8 @@ class WebTool:
             if result == PermissionResult.DENY:
                 raise PermissionError(f"Network request denied: {url}")
 
-        import urllib.request
         import urllib.error
+        import urllib.request
 
         try:
             req = urllib.request.Request(

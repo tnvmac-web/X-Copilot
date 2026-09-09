@@ -39,4 +39,4 @@ def test_list_marketplace(marketplace: SkillsMarketplace) -> None:
 
 def test_sync_skills(tmp_path: Path) -> None:
     """export/import should sync skills."""
-    pass  # Mock test
+    # Mock test

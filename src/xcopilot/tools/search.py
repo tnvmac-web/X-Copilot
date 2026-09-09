@@ -5,9 +5,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Optional, List
 
-from xcopilot.permission.pipeline import PermissionAction, PermissionResult
 from xcopilot.tools.web import WebTool
 
 
@@ -34,7 +32,7 @@ class SearchTool:
         pattern: str,
         path: str,
         max_results: int = 50,
-    ) -> List[SearchResult]:
+    ) -> list[SearchResult]:
         """Search for pattern in files under path."""
         results = []
         search_path = Path(path)
@@ -69,14 +67,14 @@ class SearchTool:
         self,
         pattern: str,
         path: str,
-    ) -> List[Path]:
+    ) -> list[Path]:
         """Find files matching pattern."""
         search_path = Path(path)
         if not search_path.exists():
             return []
         return list(search_path.glob(pattern))
 
-    def web_search(self, query: str, limit: int = 5) -> List[dict]:
+    def web_search(self, query: str, limit: int = 5) -> list[dict]:
         """Search the web using DuckDuckGo HTML."""
         try:
             results = self.web.fetch(

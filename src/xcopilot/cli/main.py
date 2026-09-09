@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-import os
-import sys
 from pathlib import Path
 
 import click
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table
 
 console = Console()
 
@@ -32,12 +30,12 @@ def cli(ctx, project, mode):
 @click.pass_context
 def start(ctx, test_mode):
     """Start the X-Copilot agent REPL."""
-    from xcopilot.memory import MemoryEngine
+    from xcopilot.core.evaluator import Evaluator
     from xcopilot.core.learner import LearnerEngine
     from xcopilot.core.planner import PlannerEngine
-    from xcopilot.core.evaluator import Evaluator
-    from xcopilot.permission.pipeline import PermissionPipeline, PermissionMode
-    from xcopilot.tools import ShellTool, FileTool, SearchTool, WebTool
+    from xcopilot.memory import MemoryEngine
+    from xcopilot.permission.pipeline import PermissionMode, PermissionPipeline
+    from xcopilot.tools import FileTool, SearchTool, ShellTool, WebTool
     
     project_root = ctx.obj["project_root"]
     perm_mode = getattr(PermissionMode, ctx.obj["permission_mode"].upper())
@@ -254,7 +252,7 @@ def update():
     with console.status("[bold green]Checking for updates..."):
         info = updater.check()
     
-    console.print(f"Current version: [cyan]0.1.0[/cyan]")
+    console.print("Current version: [cyan]0.1.0[/cyan]")
     console.print(f"Latest version: [cyan]{info.version}[/cyan]")
     console.print(f"Channel: [dim]{info.channel}[/dim]")
     
@@ -340,7 +338,7 @@ def context():
 @cli.command()
 def permissions():
     """Show current permission mode."""
-    from xcopilot.permission.pipeline import PermissionPipeline, PermissionMode
+    from xcopilot.permission.pipeline import PermissionMode, PermissionPipeline
     for mode in PermissionMode:
         pipeline = PermissionPipeline(mode)
         console.print(f"[cyan]{mode.value}[/cyan]: {mode.name}")

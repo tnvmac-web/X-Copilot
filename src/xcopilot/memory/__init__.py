@@ -5,11 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from xcopilot.memory.session import SessionMemory
 from xcopilot.memory.episodic import EpisodicMemory
-from xcopilot.memory.semantic import SemanticMemory
 from xcopilot.memory.procedural import ProceduralMemory
 from xcopilot.memory.project import ProjectMemory
+from xcopilot.memory.semantic import SemanticMemory
+from xcopilot.memory.session import SessionMemory
 
 
 class MemoryEngine:
@@ -17,12 +17,12 @@ class MemoryEngine:
 
     def __init__(
         self,
-        project_root: Optional[str] = None,
-        session: Optional[SessionMemory] = None,
-        episodic: Optional[EpisodicMemory] = None,
-        semantic: Optional[SemanticMemory] = None,
-        procedural: Optional[ProceduralMemory] = None,
-        project: Optional[ProjectMemory] = None,
+        project_root: str | None = None,
+        session: SessionMemory | None = None,
+        episodic: EpisodicMemory | None = None,
+        semantic: SemanticMemory | None = None,
+        procedural: ProceduralMemory | None = None,
+        project: ProjectMemory | None = None,
     ) -> None:
         self.project_root = Path(project_root) if project_root else Path.cwd()
 

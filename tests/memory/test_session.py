@@ -1,6 +1,5 @@
 """Tests for SessionMemory (in-memory dict layer)."""
 
-import pytest
 from xcopilot.memory.session import SessionMemory
 
 

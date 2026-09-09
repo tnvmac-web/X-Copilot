@@ -7,15 +7,14 @@ import sqlite3
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
 class EpisodicEvent:
     """A single episodic memory event."""
 
-    id: Optional[int] = None
-    timestamp: Optional[datetime] = None
+    id: int | None = None
+    timestamp: datetime | None = None
     type: str = ""
     payload: dict = None
     project: str = ""
@@ -110,8 +109,8 @@ class EpisodicMemory:
     def query(
         self,
         project: str = "",
-        type: Optional[str] = None,
-        session_id: Optional[str] = None,
+        type: str | None = None,
+        session_id: str | None = None,
         limit: int = 100,
     ) -> list[EpisodicEvent]:
         """Query events with optional filters. Returns newest first."""

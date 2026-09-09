@@ -6,7 +6,6 @@ import json
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
 
 from xcopilot.memory import MemoryEngine
 
@@ -64,7 +63,7 @@ class PlannerEngine:
         after_has_cents = bool(re.search(r"\w+_cents\s*=\s*\d+", after))
         return before_has_float and after_has_cents
 
-    def _detect_indent_change(self, before: str, after: str) -> Optional[int]:
+    def _detect_indent_change(self, before: str, after: str) -> int | None:
         """Detect indentation style from code."""
         for line in after.split("\n"):
             match = re.match(r"^(\s+)", line)

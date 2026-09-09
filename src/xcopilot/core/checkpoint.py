@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Optional
 
 
 @dataclass
@@ -21,7 +20,7 @@ class Checkpoint:
     before_hash: str
     after_hash: str
     session_id: str
-    parent: Optional[str] = None
+    parent: str | None = None
     branch: str = "main"
 
 
@@ -74,7 +73,7 @@ class CheckpointManager:
 
         return cp_id
 
-    def list_checkpoints(self, session_id: Optional[str] = None) -> list[dict]:
+    def list_checkpoints(self, session_id: str | None = None) -> list[dict]:
         """List all checkpoints for a session."""
         sid = session_id or self.session_id
         session_dir = self.checkpoints_dir / sid
@@ -114,7 +113,7 @@ class CheckpointManager:
         new_session_id = f"{parent_cp['session_id']}_{branch_name}"
         return new_session_id
 
-    def tree(self, session_id: Optional[str] = None) -> list[dict]:
+    def tree(self, session_id: str | None = None) -> list[dict]:
         """Show checkpoint tree with branches."""
         checkpoints = self.list_checkpoints(session_id)
         return checkpoints

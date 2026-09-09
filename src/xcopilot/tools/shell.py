@@ -5,7 +5,6 @@ from __future__ import annotations
 import subprocess
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
 
 from xcopilot.permission.pipeline import PermissionAction
 
@@ -39,8 +38,8 @@ class ShellTool:
     def run(
         self,
         cmd: str,
-        cwd: Optional[str] = None,
-        timeout: Optional[int] = None,
+        cwd: str | None = None,
+        timeout: int | None = None,
     ) -> ShellResult:
         """
         Run a shell command. Returns ShellResult with returncode, output, error.

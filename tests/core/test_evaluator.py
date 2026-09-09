@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import pytest
-
-from xcopilot.core.evaluator import Evaluator, EvaluationResult
+from xcopilot.core.evaluator import Evaluator
 
 
 def test_evaluator_default_criteria() -> None:

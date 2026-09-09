@@ -6,7 +6,6 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 try:
     import chromadb
@@ -28,7 +27,7 @@ class SemanticFact:
     metadata: dict = field(default_factory=dict)
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     created_at: datetime = field(default_factory=datetime.now)
-    last_accessed: Optional[datetime] = None
+    last_accessed: datetime | None = None
 
 
 class SemanticMemory:
@@ -76,8 +75,8 @@ class SemanticMemory:
         self,
         query: str,
         k: int = 5,
-        project: Optional[str] = None,
-        type: Optional[str] = None,
+        project: str | None = None,
+        type: str | None = None,
     ) -> list[SemanticFact]:
         """Search for semantically similar facts. Returns list of SemanticFact."""
         where = {}

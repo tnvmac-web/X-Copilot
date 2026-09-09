@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from xcopilot.core.learner import LearnerEngine, Signal, SignalType, Pattern, PatternType
+from xcopilot.core.learner import LearnerEngine, Pattern, PatternType, Signal, SignalType
 from xcopilot.memory import MemoryEngine
 
 

@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Optional
 
 import tiktoken
 
@@ -47,7 +45,7 @@ class CompactionManager:
             conversation=conv_tokens,
         )
 
-    def compact_if_needed(self, limit: Optional[int] = None) -> bool:
+    def compact_if_needed(self, limit: int | None = None) -> bool:
         """Auto-compact if conversation exceeds threshold."""
         limit = limit or self.max_tokens
         budget = self.get_budget()

@@ -4,7 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from xcopilot.permission.pipeline import PermissionPipeline, PermissionMode, PermissionResult, PermissionAction
+from xcopilot.permission.pipeline import (
+    PermissionAction,
+    PermissionMode,
+    PermissionPipeline,
+    PermissionResult,
+)
 
 
 @pytest.fixture

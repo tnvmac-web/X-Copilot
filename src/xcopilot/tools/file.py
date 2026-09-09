@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
-from typing import Optional
 
 from xcopilot.permission.pipeline import PermissionAction, PermissionResult
 
@@ -12,7 +10,7 @@ from xcopilot.permission.pipeline import PermissionAction, PermissionResult
 class FileTool:
     """File operations with permission checks."""
 
-    def __init__(self, pipeline, base_dir: Optional[str] = None) -> None:
+    def __init__(self, pipeline, base_dir: str | None = None) -> None:
         self.pipeline = pipeline
         self.base_dir = Path(base_dir) if base_dir else Path.cwd()
 

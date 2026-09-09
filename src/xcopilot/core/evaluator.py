@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -21,7 +20,7 @@ class Evaluator:
 
     def __init__(
         self,
-        criteria: Optional[dict[str, float]] = None,
+        criteria: dict[str, float] | None = None,
         threshold: float = 0.7,
     ) -> None:
         self.criteria = criteria or self.default_criteria()
@@ -36,7 +35,7 @@ class Evaluator:
             "safety": 0.4,
         }
 
-    def score(self, output: str, criteria: Optional[dict[str, float]] = None) -> float:
+    def score(self, output: str, criteria: dict[str, float] | None = None) -> float:
         """Score output against criteria. Returns 0.0-1.0."""
         eval_criteria = criteria or self.criteria
         breakdown = {}
@@ -58,7 +57,7 @@ class Evaluator:
     def evaluate(
         self,
         output: str,
-        criteria: Optional[dict[str, float]] = None,
+        criteria: dict[str, float] | None = None,
     ) -> EvaluationResult:
         """Evaluate output and return detailed result."""
         eval_criteria = criteria or self.criteria
@@ -166,7 +165,7 @@ class Evaluator:
         self._history[pattern_id].append(new_score)
         return new_score > old_score
 
-    def should_adapt(self, score: float, threshold: Optional[float] = None) -> bool:
+    def should_adapt(self, score: float, threshold: float | None = None) -> bool:
         """Return True if score is below adaptation threshold."""
         t = threshold or self.threshold
         return score < t

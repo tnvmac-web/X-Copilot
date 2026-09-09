@@ -11,7 +11,6 @@ console = Console()
 @click.group()
 def memory():
     """Memory management commands."""
-    pass
 
 
 @memory.command("status")
@@ -71,7 +70,6 @@ def memory_prune(ctx, days):
 @click.group()
 def skills():
     """Skill management commands."""
-    pass
 
 
 @skills.command("list")
@@ -157,7 +155,6 @@ def skills_marketplace(ctx, search):
 @click.group()
 def checkpoints():
     """Checkpoint management commands."""
-    pass
 
 
 @checkpoints.command("list")
@@ -241,7 +238,6 @@ def checkpoints_tree(ctx):
 @click.group()
 def graph():
     """Knowledge graph commands."""
-    pass
 
 
 @graph.command("build")
@@ -293,7 +289,6 @@ def graph_stats(ctx):
 @click.group()
 def update():
     """Update management commands."""
-    pass
 
 
 @update.command("check")
@@ -304,7 +299,7 @@ def update_check(ctx):
     updater = Updater()
     info = updater.check()
     
-    console.print(f"Current version: [cyan]0.1.0[/cyan]")
+    console.print("Current version: [cyan]0.1.0[/cyan]")
     console.print(f"Latest version: [cyan]{info.version}[/cyan]")
     console.print(f"Channel: [dim]{info.channel}[/dim]")
     console.print(f"Size: [dim]{info.size_bytes / 1024 / 1024:.1f} MB[/dim]")
@@ -350,7 +345,6 @@ def update_rollback(ctx):
 @click.group()
 def config():
     """Configuration commands."""
-    pass
 
 
 @config.command("show")

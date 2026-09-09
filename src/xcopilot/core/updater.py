@@ -5,9 +5,8 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
-from xcopilot.permission.pipeline import PermissionPipeline, PermissionMode
+from xcopilot.permission.pipeline import PermissionMode, PermissionPipeline
 
 
 @dataclass
@@ -34,7 +33,7 @@ class UpdateConfig:
 class Updater:
     """Auto-updater — checks, downloads, verifies, and installs updates."""
 
-    def __init__(self, data_dir: Optional[str] = None) -> None:
+    def __init__(self, data_dir: str | None = None) -> None:
         self.data_dir = Path(data_dir or "~/.xcopilot/updater").expanduser()
         self.config = UpdateConfig()
         self._backup_dir = self.data_dir / "backup"

@@ -3,19 +3,17 @@
 from __future__ import annotations
 
 import ast
-import re
 from pathlib import Path
-from typing import Optional
 
 import networkx as nx
-from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
 
 class _GraphFileHandler(FileSystemEventHandler):
     """Watchdog handler for project file changes."""
 
-    def __init__(self, graph: "KnowledgeGraph") -> None:
+    def __init__(self, graph: KnowledgeGraph) -> None:
         self.graph = graph
 
     def on_modified(self, event) -> None:
@@ -36,9 +34,9 @@ class KnowledgeGraph:
 
     def __init__(self) -> None:
         self.graph = nx.DiGraph()
-        self.project_root: Optional[Path] = None
-        self._watcher: Optional[Observer] = None
-        self._handler: Optional[_GraphFileHandler] = None
+        self.project_root: Path | None = None
+        self._watcher: Observer | None = None
+        self._handler: _GraphFileHandler | None = None
 
     def build(self, project_root: str) -> None:
         """Build knowledge graph from all Python files in project."""
@@ -116,13 +114,7 @@ class KnowledgeGraph:
         for node, data in self.graph.nodes(data=True):
             # Check node name for any query word
             node_lower = node.lower()
-            if any(word in node_lower for word in query_words):
-                results.append({"node": node, **data})
-            # Check node data
-            elif any(word in str(data).lower() for word in query_words):
-                results.append({"node": node, **data})
-            # Check for function/class names in node
-            elif data.get("type") in ("function", "class") and any(word in node_lower for word in query_words):
+            if any(word in node_lower for word in query_words) or any(word in str(data).lower() for word in query_words) or data.get("type") in ("function", "class") and any(word in node_lower for word in query_words):
                 results.append({"node": node, **data})
 
         # Also check edges for relation matches

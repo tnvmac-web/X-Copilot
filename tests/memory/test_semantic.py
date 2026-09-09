@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import tempfile
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 import pytest
 
-from xcopilot.memory.semantic import SemanticMemory, SemanticFact
+from xcopilot.memory.semantic import SemanticFact, SemanticMemory
 
 
 @pytest.fixture
