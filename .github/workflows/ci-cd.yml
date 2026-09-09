@@ -205,7 +205,7 @@ jobs:
       - name: Check for dependency updates
         run: |
           pip install pip-tools
-          pip-compile --upgrade pyproject.toml
+          pip-compile --upgrade --all-extras --output-file requirements.txt pyproject.toml
       
       - name: Create PR for updates
         uses: peter-evans/create-pull-request@v6
