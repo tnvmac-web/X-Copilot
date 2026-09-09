@@ -10,6 +10,20 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
+from xcopilot.cli.commands import (
+    checkpoints,
+    config,
+    doctor,
+    graph,
+    init,
+    mcp,
+    memory,
+    model,
+    skill,
+    skills,
+    update,
+)
+
 console = Console()
 
 
@@ -28,6 +42,20 @@ def cli(ctx, project, mode):
     ctx.ensure_object(dict)
     ctx.obj["project_root"] = Path(project) if project else Path.cwd()
     ctx.obj["permission_mode"] = mode
+
+
+# Add all command groups
+cli.add_command(memory)
+cli.add_command(skills)
+cli.add_command(checkpoints)
+cli.add_command(graph)
+cli.add_command(update)
+cli.add_command(config)
+cli.add_command(model)
+cli.add_command(mcp)
+cli.add_command(skill)
+cli.add_command(init)
+cli.add_command(doctor)
 
 
 @cli.command()
@@ -123,10 +151,16 @@ def _print_help():
         ("checkpoints", "List checkpoints"),
         ("rewind <id>", "Rewind to checkpoint"),
         ("update", "Check for updates"),
+        ("model list", "List available models"),
+        ("model chat", "Quick chat with a model"),
+        ("mcp list", "List MCP servers"),
+        ("skill search", "Search skills marketplace"),
+        ("init project", "Initialize new project"),
+        ("doctor", "Run diagnostics"),
         ("exit/quit/q", "Exit the REPL"),
     ]
     for cmd, desc in commands:
-        console.print(f"  [cyan]{cmd:<20}[/cyan] {desc}")
+        console.print(f"  [cyan]{cmd:<25}[/cyan] {desc}")
     console.print()
 
 
@@ -193,181 +227,6 @@ def _check_update():
     updater = Updater()
     info = updater.check()
     console.print(f"[blue]Current: 0.1.0, Latest: {info.version}[/blue]")
-
-
-@cli.command()
-def memory():
-    """Show memory status."""
-    from xcopilot.memory import MemoryEngine
-
-    memory = MemoryEngine(project_root=Path.cwd())
-    _show_memory_status(memory)
-
-
-@cli.command()
-def skills():
-    """List available skills."""
-    from xcopilot.memory import MemoryEngine
-
-    memory = MemoryEngine(project_root=Path.cwd())
-    _show_skills(memory)
-
-
-@cli.command()
-@click.option("--repo", help="Repository to search (e.g., addyosmani/agent-skills)")
-@click.option("--install", help="Install a skill by name")
-def skills_marketplace(repo, install):
-    """Browse or install skills from marketplace."""
-    from xcopilot.skills.marketplace import SkillsMarketplace
-
-    marketplace = SkillsMarketplace()
-
-    if install:
-        project_root = Path.cwd()
-        skill_path = marketplace.install(
-            repo or "addyosmani/agent-skills", install, str(project_root)
-        )
-        if skill_path:
-            console.print(f"[green]✓[/green] Installed {install} to {skill_path}")
-        else:
-            console.print(f"[red]✗[/red] Failed to install {install}")
-    else:
-        skills = marketplace.list_marketplace()
-        table = Table(title="Marketplace Skills")
-        table.add_column("Name", style="cyan")
-        table.add_column("Repo", style="dim")
-        table.add_column("Description")
-        for skill in skills:
-            table.add_row(skill.name, skill.repo, skill.description)
-        console.print(table)
-
-
-@cli.command()
-def graph():
-    """Build knowledge graph for current project."""
-    _build_graph(Path.cwd())
-
-
-@cli.command()
-def checkpoints():
-    """List checkpoints for current session."""
-    _show_checkpoints(Path.cwd())
-
-
-@cli.command()
-@click.argument("checkpoint_id")
-def rewind(checkpoint_id):
-    """Rewind to a checkpoint."""
-    _rewind_checkpoint(checkpoint_id, Path.cwd())
-
-
-@cli.command()
-def update():
-    """Check for and apply updates."""
-    from xcopilot.core.updater import Updater
-
-    updater = Updater()
-
-    with console.status("[bold green]Checking for updates..."):
-        info = updater.check()
-
-    console.print("Current version: [cyan]0.1.0[/cyan]")
-    console.print(f"Latest version: [cyan]{info.version}[/cyan]")
-    console.print(f"Channel: [dim]{info.channel}[/dim]")
-
-    if info.version != "0.1.0":
-        if click.confirm("Update now?"):
-            with Progress(
-                SpinnerColumn(),
-                TextColumn("[progress.description]{task.description}"),
-                console=console,
-            ) as progress:
-                task = progress.add_task("Downloading...", total=None)
-                path = updater.download(info)
-                progress.update(task, description="Verifying...")
-                if updater.verify(path, info.sha256):
-                    progress.update(task, description="Installing...")
-                    updater.install(info)
-                    console.print("[green]✓[/green] Update installed! Restart X-Copilot.")
-                else:
-                    console.print("[red]✗[/red] Checksum verification failed")
-    else:
-        console.print("[green]Already up to date![/green]")
-
-
-@cli.command()
-@click.argument("checkpoint_id")
-@click.argument("branch_name")
-def fork(checkpoint_id, branch_name):
-    """Create a new branch from a checkpoint."""
-    from xcopilot.core.checkpoint import CheckpointManager
-
-    cp_mgr = CheckpointManager(checkpoints_dir=str(Path.cwd() / ".xcopilot" / "checkpoints"))
-    fork_id = cp_mgr.fork(checkpoint_id, branch_name)
-    if fork_id:
-        console.print(f"[green]✓[/green] Created branch: {fork_id}")
-    else:
-        console.print(f"[red]✗[/red] Checkpoint {checkpoint_id} not found")
-
-
-@cli.command()
-def tree():
-    """Show checkpoint tree."""
-    from xcopilot.core.checkpoint import CheckpointManager
-
-    cp_mgr = CheckpointManager(checkpoints_dir=str(Path.cwd() / ".xcopilot" / "checkpoints"))
-    checkpoints = cp_mgr.tree()
-    if checkpoints:
-        table = Table(title="Checkpoint Tree")
-        table.add_column("ID", style="cyan")
-        table.add_column("Timestamp", style="dim")
-        table.add_column("Action", style="green")
-        table.add_column("Target", style="yellow")
-        for cp in checkpoints:
-            table.add_row(cp["id"], cp["timestamp"], cp["action"], cp["target"])
-        console.print(table)
-    else:
-        console.print("[yellow]No checkpoints[/yellow]")
-
-
-@cli.command()
-@click.option(
-    "--mode", type=click.Choice(["default", "fast"]), default="default", help="Compaction mode"
-)
-def compact(mode):
-    """Compact conversation history."""
-    from xcopilot.core.compaction import CompactionManager
-
-    cm = CompactionManager()
-    result = cm.compact(mode=mode)
-    console.print(f"[green]✓[/green] Compacted ({mode} mode)")
-    console.print(result)
-
-
-@cli.command()
-def context():
-    """Show token budget breakdown."""
-    from xcopilot.core.compaction import CompactionManager
-
-    cm = CompactionManager()
-    budget = cm.get_budget()
-    console.print(f"Total: [cyan]{budget.total}[/cyan]")
-    console.print(f"Used: [cyan]{budget.used}[/cyan]")
-    console.print(f"  Memory: [dim]{budget.memory}[/dim]")
-    console.print(f"  Skills: [dim]{budget.skills}[/dim]")
-    console.print(f"  Conversation: [dim]{budget.conversation}[/dim]")
-    pct = (budget.used / budget.total) * 100
-    console.print(f"Usage: [cyan]{pct:.1f}%[/cyan]")
-
-
-@cli.command()
-def permissions():
-    """Show current permission mode."""
-    from xcopilot.permission.pipeline import PermissionMode, PermissionPipeline
-
-    for mode in PermissionMode:
-        _pipeline = PermissionPipeline(mode)
-        console.print(f"[cyan]{mode.value}[/cyan]: {mode.name}")
 
 
 if __name__ == "__main__":
