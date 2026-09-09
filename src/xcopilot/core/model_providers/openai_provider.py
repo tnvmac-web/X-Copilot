@@ -28,6 +28,7 @@ class OpenAIProvider(ModelProviderBase):
         self.base_url = config.get("base_url") or "https://api.openai.com/v1"
         self.organization = config.get("organization")
         self._client = None
+        self._models_cache: list[ModelInfo] = []
 
     @property
     def provider_type(self) -> ModelProvider:

@@ -27,6 +27,7 @@ class LMStudioProvider(ModelProviderBase):
         self.base_url = config.get("base_url") or os.environ.get("LMSTUDIO_BASE_URL") or "http://localhost:1234/v1"
         self.api_key = config.get("api_key") or "lm-studio"  # LM Studio accepts any key
         self._client = None
+        self._models_cache: list[ModelInfo] = []
 
     @property
     def provider_type(self) -> ModelProvider:

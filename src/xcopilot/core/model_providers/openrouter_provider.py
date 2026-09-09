@@ -29,6 +29,7 @@ class OpenRouterProvider(ModelProviderBase):
         self.app_name = config.get("app_name") or "X-Copilot"
         self.app_url = config.get("app_url") or "https://xcopilot.ai"
         self._client = None
+        self._models_cache: list[ModelInfo] = []
 
     @property
     def provider_type(self) -> ModelProvider:

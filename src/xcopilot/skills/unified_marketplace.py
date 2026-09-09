@@ -270,6 +270,7 @@ class AnthropicCybersecuritySkillsSource(SkillSource):
                     )
         except (yaml.YAMLError, ValueError, KeyError):
             return None
+        return None
 
     async def install(self, skill_name: str, project_root: str) -> str | None:
         skill = next((s for s in self._skills_cache if s.name == skill_name), None)
@@ -373,6 +374,7 @@ class ScientificSkillsSource(SkillSource):
                     )
         except (yaml.YAMLError, ValueError, KeyError):
             return None
+        return None
 
     async def install(self, skill_name: str, project_root: str) -> str | None:
         skill = next((s for s in self._skills_cache if s.name == skill_name), None)
@@ -714,6 +716,7 @@ class OpenVikingSkillsSource(SkillSource):
                 )
         except (yaml.YAMLError, ValueError, KeyError):
             return None
+        return None
 
     async def install(self, skill_name: str, project_root: str) -> str | None:
         skill = next((s for s in self._skills_cache if s.name == skill_name), None)

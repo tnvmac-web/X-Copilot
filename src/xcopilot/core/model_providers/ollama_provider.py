@@ -26,6 +26,7 @@ class OllamaProvider(ModelProviderBase):
         super().__init__(config)
         self.base_url = config.get("base_url") or os.environ.get("OLLAMA_BASE_URL") or "http://localhost:11434"
         self._client = None
+        self._models_cache: list[ModelInfo] = []
 
     @property
     def provider_type(self) -> ModelProvider:
@@ -57,7 +58,7 @@ class OllamaProvider(ModelProviderBase):
                 ollama_msg["tool_calls"] = msg.tool_calls
             ollama_messages.append(ollama_msg)
 
-        payload = {
+        payload: dict = {
             "model": model,
             "messages": ollama_messages,
             "stream": stream,

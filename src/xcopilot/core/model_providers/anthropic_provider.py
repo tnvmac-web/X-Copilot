@@ -27,6 +27,7 @@ class AnthropicProvider(ModelProviderBase):
         self.api_key = config.get("api_key") or os.environ.get("ANTHROPIC_API_KEY")
         self.base_url = config.get("base_url") or "https://api.anthropic.com"
         self._client = None
+        self._models_cache: list[ModelInfo] = []
 
     @property
     def provider_type(self) -> ModelProvider:
