@@ -34,6 +34,7 @@ dependencies = [
     "rich>=13.7",
     "click>=8.1",
     "openai>=1.30",
+    "tiktoken>=0.7",
     "watchdog>=3.0",
     "networkx>=3.2",
 ]

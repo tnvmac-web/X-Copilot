@@ -49,10 +49,11 @@ def test_shell_run(shell_tool: ShellTool) -> None:
 
 def test_shell_run_with_cwd(shell_tool: ShellTool, tmp_path: Path) -> None:
     """ShellTool.run should respect cwd."""
-    result = shell_tool.run("cd", cwd=str(tmp_path), timeout=5)
+    result = shell_tool.run(
+        'python -c "import os; print(os.getcwd())"', cwd=str(tmp_path), timeout=5
+    )
     assert result.returncode == 0
-    # On Windows, cd returns the current directory - check it's not empty
-    assert len(result.output.strip()) > 0
+    assert Path(result.output.strip()) == tmp_path
 
 
 def test_shell_run_timeout(shell_tool: ShellTool) -> None:
