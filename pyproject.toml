@@ -5,9 +5,26 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "x-copilot"
 version = "0.1.0"
-description = "Self-growing AI agent for Windows"
-readme = "README.md"
+description = "Self-growing AI agent for Windows with 5-layer memory, auto skill creation, and permission pipeline"
+readme = { file = "README.md", content-type = "text/markdown" }
 requires-python = ">=3.11"
+authors = [
+    { name = "tnvmac", email = "tnvmac@web.com" }
+]
+maintainers = [
+    { name = "tnvmac", email = "tnvmac@web.com" }
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows :: Windows 10",
+    "Operating System :: Microsoft :: Windows :: Windows 11",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
 dependencies = [
     "jsonlines>=4.0",
     "chromadb>=0.5",
@@ -22,8 +39,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.4", "mypy>=1.10"]
+dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.4", "mypy>=1.10", "pytest-cov>=4.0"]
 cli = ["nodeenv>=1.9"]
+
+[project.entry-points]
+console_scripts = { "xcopilot" = "xcopilot.cli.main:cli" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

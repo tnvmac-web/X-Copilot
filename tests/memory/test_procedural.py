@@ -75,9 +75,17 @@ def test_list_skills_returns_all_skills(tmp_dir: Path, write_sample_skill: Path)
 
 
 def test_list_skills_empty_when_no_skills(tmp_dir: Path) -> None:
-    """list_skills should return an empty list when no SKILL.md files exist."""
+    """list_skills should return only built-in skills when no project/global skills exist."""
     mem = ProceduralMemory(project_root=str(tmp_dir))
-    assert mem.list_skills() == []
+    skills = mem.list_skills()
+    # Should have built-in skills even when no project skills exist
+    names = {s.name for s in skills}
+    assert "code-review" in names
+    assert "debug" in names
+    assert "deploy" in names
+    assert "test" in names
+    assert "learn" in names
+    assert "refactor" in names
 
 
 def test_create_skill_writes_file(tmp_dir: Path) -> None:

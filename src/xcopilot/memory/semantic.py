@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from typing import Optional
 
 try:
     import chromadb
@@ -26,8 +27,9 @@ class SemanticFact:
     type: str = "note"
     metadata: dict = field(default_factory=dict)
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = field(default_factory=datetime.now)
-    last_accessed: datetime | None = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_accessed: Optional[datetime] = None
+    decayed: bool = False
 
 
 class SemanticMemory:
@@ -54,15 +56,16 @@ class SemanticMemory:
 
     def add(self, fact: SemanticFact) -> str:
         """Add a fact to the vector store. Returns the fact ID."""
-        # Prepare metadata for ChromaDB
-        meta = {
+        meta: dict = {
             "project": fact.project,
             "type": fact.type,
             "created_at": fact.created_at.isoformat(),
+            "decayed": str(fact.decayed),
             **fact.metadata,
         }
         if fact.last_accessed:
-            meta["last_accessed"] = fact.last_accessed.isoformat()
+            # Store as timestamp for comparison in decay()
+            meta["last_accessed"] = fact.last_accessed.timestamp()
 
         self.collection.add(
             ids=[fact.id],
@@ -75,49 +78,108 @@ class SemanticMemory:
         self,
         query: str,
         k: int = 5,
-        project: str | None = None,
-        type: str | None = None,
+        project: Optional[str] = None,
+        type: Optional[str] = None,
     ) -> list[SemanticFact]:
         """Search for semantically similar facts. Returns list of SemanticFact."""
-        where = {}
+        # Build where filter for ChromaDB v1.x.
+        # Single-key where is fine; multiple keys require $and operator.
+        filter_conditions: list[dict] = []
         if project:
-            where["project"] = project
+            filter_conditions.append({"project": project})
         if type:
-            where["type"] = type
+            filter_conditions.append({"type": type})
+        # Always exclude decayed facts
+        filter_conditions.append({"decayed": "False"})
+
+        if len(filter_conditions) == 1:
+            where = filter_conditions[0]
+        elif len(filter_conditions) > 1:
+            where = {"$and": filter_conditions}
+        else:
+            where = None
 
         results = self.collection.query(
             query_texts=[query],
             n_results=k,
-            where=where if where else None,
+            where=where,
+            include=["metadatas", "documents", "distances"],
         )
 
-        facts = []
+        facts: list[SemanticFact] = []
         if results["ids"] and results["ids"][0]:
             for i, fact_id in enumerate(results["ids"][0]):
                 meta = results["metadatas"][0][i]
                 content = results["documents"][0][i]
-                distance = results["distances"][0][i] if results["distances"] else None
+
+                created_at_str = meta.get("created_at", "")
+                created_at = (
+                    datetime.fromisoformat(created_at_str)
+                    if created_at_str
+                    else datetime.now(timezone.utc)
+                )
+
+                # last_accessed stored as timestamp float
+                last_accessed_ts = meta.get("last_accessed")
+                last_accessed = (
+                    datetime.fromtimestamp(last_accessed_ts, tz=timezone.utc)
+                    if last_accessed_ts
+                    else None
+                )
 
                 fact = SemanticFact(
                     id=fact_id,
                     content=content,
                     project=meta.get("project", ""),
                     type=meta.get("type", "note"),
-                    metadata={k: v for k, v in meta.items() if k not in ("project", "type", "created_at", "last_accessed")},
-                    created_at=datetime.fromisoformat(meta["created_at"]),
-                    last_accessed=datetime.fromisoformat(meta["last_accessed"]) if meta.get("last_accessed") else None,
+                    metadata={
+                        k: v
+                        for k, v in meta.items()
+                        if k
+                        not in (
+                            "project",
+                            "type",
+                            "created_at",
+                            "last_accessed",
+                            "decayed",
+                        )
+                    },
+                    created_at=created_at,
+                    last_accessed=last_accessed,
+                    decayed=meta.get("decayed", "False") == "True",
                 )
                 facts.append(fact)
 
         return facts
 
     def decay(self, days: int = 90) -> int:
-        """Mark old unused facts for pruning. Returns count of decayed facts."""
-        # In a full implementation, this would update last_accessed and
-        # optionally delete facts not accessed within the threshold.
-        # For now, just return 0 as a placeholder.
-        # A real implementation would scan metadata and delete old entries.
-        return 0
+        """Delete old unused facts from the store.
+
+        Facts whose last_accessed is older than `days` are removed.
+        Returns the count of deleted facts.
+        """
+        cutoff_ts = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff_timestamp = cutoff_ts.timestamp()
+
+        # Get all facts with last_accessed older than cutoff
+        all_results = self.collection.get(
+            where={"last_accessed": {"$lt": cutoff_timestamp}},
+        )
+
+        deleted_count = 0
+        if all_results["ids"]:
+            self.collection.delete(ids=all_results["ids"])
+            deleted_count = len(all_results["ids"])
+
+        return deleted_count
+
+    def update_access(self, fact_id: str) -> None:
+        """Update the last_accessed timestamp for a fact after retrieval."""
+        now_ts = datetime.now(timezone.utc).timestamp()
+        self.collection.update(
+            ids=[fact_id],
+            metadatas=[{"last_accessed": now_ts}],
+        )
 
     def get_collection_stats(self) -> dict:
         """Return statistics about the collection."""
@@ -125,4 +187,22 @@ class SemanticMemory:
         return {
             "total_facts": count,
             "collection_name": self.collection.name,
+            "persist_dir": str(self.persist_dir),
         }
+
+    def delete(self, fact_id: str) -> bool:
+        """Delete a specific fact by ID. Returns True if found and deleted."""
+        all_results = self.collection.get()
+        if fact_id not in all_results["ids"]:
+            return False
+        self.collection.delete(ids=[fact_id])
+        return True
+
+    def clear(self) -> None:
+        """Delete all facts from the collection."""
+        all_results = self.collection.get()
+        ids = all_results["ids"]
+        batch_size = 1000
+        for i in range(0, len(ids), batch_size):
+            batch = ids[i : i + batch_size]
+            self.collection.delete(ids=batch)

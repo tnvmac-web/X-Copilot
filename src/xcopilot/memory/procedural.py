@@ -25,6 +25,8 @@ class ProceduralMemory:
     def __init__(self, project_root: str | None = None) -> None:
         self.project_root = Path(project_root) if project_root else Path.cwd()
         self.global_skills_dir = Path.home() / ".xcopilot" / "skills"
+        # Built-in skills directory (from package)
+        self.builtin_skills_dir = Path(__file__).parent.parent / "skills"
 
     def _parse_skill_file(self, skill_path: Path) -> SkillData:
         """Parse a single SKILL.md file with YAML frontmatter."""
@@ -83,11 +85,12 @@ class ProceduralMemory:
         return skills
 
     def list_skills(self) -> list[SkillData]:
-        """List all skills from project and global directories."""
+        """List all skills from project, global, and built-in directories."""
         skills = []
         project_skills_dir = self.project_root / ".xcopilot" / "skills"
         skills.extend(self._discover_skills(project_skills_dir))
         skills.extend(self._discover_skills(self.global_skills_dir))
+        skills.extend(self._discover_skills(self.builtin_skills_dir))
         return skills
 
     def create_skill(

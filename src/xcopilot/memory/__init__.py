@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Optional
 
 from xcopilot.memory.episodic import EpisodicMemory
 from xcopilot.memory.procedural import ProceduralMemory

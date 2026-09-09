@@ -36,41 +36,41 @@ def start(ctx, test_mode):
     from xcopilot.memory import MemoryEngine
     from xcopilot.permission.pipeline import PermissionMode, PermissionPipeline
     from xcopilot.tools import FileTool, SearchTool, ShellTool, WebTool
-    
+
     project_root = ctx.obj["project_root"]
     perm_mode = getattr(PermissionMode, ctx.obj["permission_mode"].upper())
-    
+
     console.print(Panel.fit(
         "[bold cyan]X-Copilot[/bold cyan] — Self-growing AI agent for Windows",
         subtitle="v0.1.0"
     ))
-    
+
     # Initialize components
     memory = MemoryEngine(project_root=str(project_root))
-    learner = LearnerEngine(memory)
-    planner = PlannerEngine(memory)
-    evaluator = Evaluator()
-    pipeline = PermissionPipeline(perm_mode)
-    
-    tools = {
-        "shell": ShellTool(pipeline),
-        "file": FileTool(pipeline),
+    _learner = LearnerEngine(memory)
+    _planner = PlannerEngine(memory)
+    _evaluator = Evaluator()
+    _pipeline = PermissionPipeline(perm_mode)
+
+    _tools = {
+        "shell": ShellTool(_pipeline),
+        "file": FileTool(_pipeline),
         "search": SearchTool(),
-        "web": WebTool(pipeline),
+        "web": WebTool(_pipeline),
     }
-    
+
     console.print("[green]✓[/green] Memory engine initialized")
     console.print("[green]✓[/green] Learner engine ready")
     console.print("[green]✓[/green] Planner engine ready")
     console.print("[green]✓[/green] Evaluator ready")
     console.print(f"[green]✓[/green] Permission mode: {perm_mode.value}")
     console.print("[green]✓[/green] Tools loaded: shell, file, search, web")
-    
+
     if test_mode:
         console.print("[yellow]Test mode enabled - no model API calls[/yellow]")
-    
+
     console.print("\n[bold]Ready for commands![/bold] Type 'help' for available commands.\n")
-    
+
     # Simple REPL
     while True:
         try:
@@ -205,7 +205,7 @@ def skills_marketplace(repo, install):
     """Browse or install skills from marketplace."""
     from xcopilot.skills.marketplace import SkillsMarketplace
     marketplace = SkillsMarketplace()
-    
+
     if install:
         project_root = Path.cwd()
         skill_path = marketplace.install(repo or "addyosmani/agent-skills", install, str(project_root))
@@ -248,14 +248,14 @@ def update():
     """Check for and apply updates."""
     from xcopilot.core.updater import Updater
     updater = Updater()
-    
+
     with console.status("[bold green]Checking for updates..."):
         info = updater.check()
-    
-    console.print("Current version: [cyan]0.1.0[/cyan]")
+
+    console.print(f"Current version: [cyan]0.1.0[/cyan]")
     console.print(f"Latest version: [cyan]{info.version}[/cyan]")
     console.print(f"Channel: [dim]{info.channel}[/dim]")
-    
+
     if info.version != "0.1.0":
         if click.confirm("Update now?"):
             with Progress(
@@ -340,7 +340,7 @@ def permissions():
     """Show current permission mode."""
     from xcopilot.permission.pipeline import PermissionMode, PermissionPipeline
     for mode in PermissionMode:
-        pipeline = PermissionPipeline(mode)
+        _pipeline = PermissionPipeline(mode)
         console.print(f"[cyan]{mode.value}[/cyan]: {mode.name}")
 
 
