@@ -1,0 +1,39 @@
+{
+  "$schema": "https://aka.ms/winget-manifests.installer.1.0.0.json",
+  "PackageIdentifier": "tnvmac.X-Copilot",
+  "PackageVersion": "0.1.0",
+  "PackageName": "X-Copilot",
+  "Publisher": "tnvmac",
+  "License": "MIT",
+  "LicenseUrl": "https://github.com/tnvmac-web/X-Copilot/blob/main/LICENSE",
+  "ShortDescription": "Self-growing AI agent for Windows",
+  "Description": "X-Copilot is a self-improving AI agent built for Windows that grows with the user — learning preferences, acquiring skills, and adapting behavior over time. It runs natively on any Windows 10/11 build using built-in Windows tools, with no WSL, Docker, or external dependencies required.",
+  "Tags": ["ai", "agent", "copilot", "memory", "skills", "learning"],
+  "Installers": [
+    {
+      "Architecture": "x64",
+      "InstallerType": "exe",
+      "InstallerUrl": "https://github.com/tnvmac-web/X-Copilot/releases/download/v0.1.0/xcopilot-installer.exe",
+      "InstallerSha256": "PLACEHOLDER_SHA256",
+      "InstallerSwitches": {
+        "Silent": "/silent",
+        "SilentWithProgress": "/silent"
+      }
+    }
+  ],
+  "MinimumOSVersion": "10.0.19041.0",
+  "Dependencies": {
+    "PackageDependencies": [
+      {
+        "PackageIdentifier": "Python.Python.3.11",
+        "MinimumVersion": "3.11.0"
+      },
+      {
+        "PackageIdentifier": "Nodejs.Nodejs.20",
+        "MinimumVersion": "20.0.0"
+      }
+    ]
+  },
+  "ManifestType": "installer",
+  "ManifestVersion": "1.0.0"
+}
