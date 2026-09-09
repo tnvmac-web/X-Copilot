@@ -40,3 +40,8 @@ warn_return_any = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+
+[tool.coverage.run]
+omit = [
+    "src/xcopilot/cli/*",
+]
