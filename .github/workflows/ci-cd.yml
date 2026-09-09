@@ -32,6 +32,10 @@ jobs:
         run: |
           pip install -e ".[dev]"
       
+      - name: Verify installation
+        run: |
+          python -c "import xcopilot; print('xcopilot imported successfully')"
+      
       - name: Run tests
         run: |
           pytest tests/ -v --tb=short
