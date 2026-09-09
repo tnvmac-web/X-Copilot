@@ -9,11 +9,11 @@ from enum import Enum
 class PermissionMode(Enum):
     """Permission modes controlling agent behavior."""
 
-    STANDARD = "standard"      # Prompt before edits/commands
-    AUTO_ASK = "auto_ask"      # Always prompts
-    PLAN = "plan"              # Read-only, no side effects
-    BYPASS = "bypass"          # Skip all prompts
-    DONT_ASK = "dont_ask"      # Auto-allow (denies in bypass)
+    STANDARD = "standard"  # Prompt before edits/commands
+    AUTO_ASK = "auto_ask"  # Always prompts
+    PLAN = "plan"  # Read-only, no side effects
+    BYPASS = "bypass"  # Skip all prompts
+    DONT_ASK = "dont_ask"  # Auto-allow (denies in bypass)
 
 
 class PermissionResult(Enum):
@@ -130,8 +130,12 @@ class PermissionPipeline:
 
         # DONT_ASK mode: allow non-destructive, deny destructive (already checked above)
         if self.mode == PermissionMode.DONT_ASK:
-            if action in (PermissionAction.READ_FILE, PermissionAction.WRITE_FILE,
-                          PermissionAction.EDIT_FILE, PermissionAction.SHELL_COMMAND):
+            if action in (
+                PermissionAction.READ_FILE,
+                PermissionAction.WRITE_FILE,
+                PermissionAction.EDIT_FILE,
+                PermissionAction.SHELL_COMMAND,
+            ):
                 return PermissionResult.ALLOW
             return PermissionResult.DENY
 
@@ -148,7 +152,18 @@ class PermissionPipeline:
             if action == PermissionAction.SHELL_COMMAND:
                 # Safe commands allowed, others ask
                 cmd = context.get("cmd", "").lower()
-                safe_commands = ["ls", "dir", "pwd", "cd", "cat", "type", "head", "tail", "grep", "find"]
+                safe_commands = [
+                    "ls",
+                    "dir",
+                    "pwd",
+                    "cd",
+                    "cat",
+                    "type",
+                    "head",
+                    "tail",
+                    "grep",
+                    "find",
+                ]
                 if any(cmd.startswith(safe + " ") or cmd == safe for safe in safe_commands):
                     return PermissionResult.ALLOW
                 return PermissionResult.ASK
@@ -157,8 +172,11 @@ class PermissionPipeline:
                 if any(domain in url for domain in SAFE_DOMAINS):
                     return PermissionResult.ALLOW
                 return PermissionResult.ASK
-            if action in (PermissionAction.DELETE_FILE, PermissionAction.PACKAGE_INSTALL,
-                          PermissionAction.GIT_PUSH):
+            if action in (
+                PermissionAction.DELETE_FILE,
+                PermissionAction.PACKAGE_INSTALL,
+                PermissionAction.GIT_PUSH,
+            ):
                 return PermissionResult.DENY
 
         return PermissionResult.ASK

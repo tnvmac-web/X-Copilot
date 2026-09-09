@@ -67,7 +67,11 @@ class CompactionManager:
             # Keep first 3 and last 3, summarize middle
             if len(self.conversation_history) <= 6:
                 return "\n".join(self.conversation_history)
-            kept = self.conversation_history[:3] + ["... [compacted] ..."] + self.conversation_history[-3:]
+            kept = (
+                self.conversation_history[:3]
+                + ["... [compacted] ..."]
+                + self.conversation_history[-3:]
+            )
             self.conversation_history = kept
             return "\n".join(kept)
         else:

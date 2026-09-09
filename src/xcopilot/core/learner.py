@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 
 from xcopilot.memory import MemoryEngine
@@ -70,13 +70,16 @@ class LearnerEngine:
 
         # Also store in episodic memory for persistence
         from xcopilot.memory.episodic import EpisodicEvent
-        self.memory.episodic.append(EpisodicEvent(
-            type=signal.type.value,
-            payload=signal.payload,
-            project=signal.context.get("project", ""),
-            session_id=signal.context.get("session_id", ""),
-            timestamp=signal.timestamp,
-        ))
+
+        self.memory.episodic.append(
+            EpisodicEvent(
+                type=signal.type.value,
+                payload=signal.payload,
+                project=signal.context.get("project", ""),
+                session_id=signal.context.get("session_id", ""),
+                timestamp=signal.timestamp,
+            )
+        )
 
     def distill(self) -> list[Pattern]:
         """Distill buffered signals into patterns."""
@@ -134,8 +137,8 @@ class LearnerEngine:
                     description=f"User prefers: {desc}",
                     evidence=signals[:3],  # Keep first 3 as evidence
                     confidence=min(0.5 + (count * 0.1), 0.95),
-                    created_at=datetime.now(),
-                    last_reinforced=datetime.now(),
+                    created_at=datetime.now(UTC),
+                    last_reinforced=datetime.now(UTC),
                 )
                 patterns.append(pattern)
 
@@ -161,8 +164,8 @@ class LearnerEngine:
                     description=f"Repeated error: {desc}",
                     evidence=signals[:3],
                     confidence=min(0.5 + (count * 0.1), 0.95),
-                    created_at=datetime.now(),
-                    last_reinforced=datetime.now(),
+                    created_at=datetime.now(UTC),
+                    last_reinforced=datetime.now(UTC),
                 )
                 patterns.append(pattern)
 
@@ -177,7 +180,7 @@ class LearnerEngine:
             # Look for repeated 3-tool sequences
             sequences = []
             for i in range(len(tools) - 2):
-                seq = tuple(tools[i:i+3])
+                seq = tuple(tools[i : i + 3])
                 sequences.append(seq)
 
             seq_counts = Counter(sequences)
@@ -190,8 +193,8 @@ class LearnerEngine:
                         description=f"Repeated workflow: {' -> '.join(seq)}",
                         evidence=signals[:3],
                         confidence=min(0.5 + (count * 0.15), 0.9),
-                        created_at=datetime.now(),
-                        last_reinforced=datetime.now(),
+                        created_at=datetime.now(UTC),
+                        last_reinforced=datetime.now(UTC),
                     )
                     patterns.append(pattern)
 
@@ -200,10 +203,11 @@ class LearnerEngine:
     def store(self, pattern: Pattern) -> None:
         """Store a pattern to the appropriate memory layer."""
         project_str = str(self.memory.project_root)
-        
+
         if pattern.type == PatternType.PREFERENCE:
             # Store as semantic fact
             from xcopilot.memory.semantic import SemanticFact
+
             fact = SemanticFact(
                 content=pattern.description,
                 project=project_str,
@@ -219,6 +223,7 @@ class LearnerEngine:
         elif pattern.type == PatternType.MISTAKE:
             # Store as semantic fact for avoidance
             from xcopilot.memory.semantic import SemanticFact
+
             fact = SemanticFact(
                 content=f"Avoid: {pattern.description}",
                 project=project_str,

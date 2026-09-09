@@ -90,8 +90,11 @@ class KnowledgeGraph:
         if self.project_root and path.is_relative_to(self.project_root):
             rel_path = str(path.relative_to(self.project_root))
             # Remove old nodes for this file
-            nodes_to_remove = [n for n, d in self.graph.nodes(data=True) 
-                              if d.get("file") == rel_path or n == rel_path]
+            nodes_to_remove = [
+                n
+                for n, d in self.graph.nodes(data=True)
+                if d.get("file") == rel_path or n == rel_path
+            ]
             self.graph.remove_nodes_from(nodes_to_remove)
             # Re-parse
             self._parse_file(path)
@@ -101,8 +104,11 @@ class KnowledgeGraph:
         path = Path(file_path)
         if self.project_root and path.is_relative_to(self.project_root):
             rel_path = str(path.relative_to(self.project_root))
-            nodes_to_remove = [n for n, d in self.graph.nodes(data=True)
-                              if d.get("file") == rel_path or n == rel_path]
+            nodes_to_remove = [
+                n
+                for n, d in self.graph.nodes(data=True)
+                if d.get("file") == rel_path or n == rel_path
+            ]
             self.graph.remove_nodes_from(nodes_to_remove)
 
     def query(self, query_str: str) -> list:
@@ -114,7 +120,12 @@ class KnowledgeGraph:
         for node, data in self.graph.nodes(data=True):
             # Check node name for any query word
             node_lower = node.lower()
-            if any(word in node_lower for word in query_words) or any(word in str(data).lower() for word in query_words) or data.get("type") in ("function", "class") and any(word in node_lower for word in query_words):
+            if (
+                any(word in node_lower for word in query_words)
+                or any(word in str(data).lower() for word in query_words)
+                or data.get("type") in ("function", "class")
+                and any(word in node_lower for word in query_words)
+            ):
                 results.append({"node": node, **data})
 
         # Also check edges for relation matches

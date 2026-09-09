@@ -66,6 +66,7 @@ class ShellTool:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
+                check=False,
             )
             return ShellResult(
                 returncode=proc.returncode,
@@ -80,7 +81,7 @@ class ShellTool:
                 error=f"Command timed out after {timeout}s",
                 result_type=CommandResult.TIMEOUT,
             )
-        except Exception as e:
+        except subprocess.CalledProcessError as e:
             return ShellResult(
                 returncode=1,
                 output="",

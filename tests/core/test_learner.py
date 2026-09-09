@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -78,7 +78,10 @@ def test_distill_classifies_mistake(learner: LearnerEngine) -> None:
     patterns = learner.distill()
     mistake_patterns = [p for p in patterns if p.type == PatternType.MISTAKE]
     assert len(mistake_patterns) >= 1
-    assert any("float" in p.description.lower() or "money" in p.description.lower() for p in mistake_patterns)
+    assert any(
+        "float" in p.description.lower() or "money" in p.description.lower()
+        for p in mistake_patterns
+    )
 
 
 def test_distill_classifies_workflow(learner: LearnerEngine) -> None:
@@ -107,8 +110,8 @@ def test_store_saves_to_procedural_memory(learner: LearnerEngine, tmp_path: Path
         description="Use TypeScript for new files",
         evidence=[],
         confidence=0.9,
-        created_at=datetime.now(),
-        last_reinforced=datetime.now(),
+        created_at=datetime.now(UTC),
+        last_reinforced=datetime.now(UTC),
     )
     learner.store(pattern)
 

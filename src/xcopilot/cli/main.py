@@ -16,7 +16,12 @@ console = Console()
 @click.group()
 @click.version_option(version="0.1.0", prog_name="xcopilot")
 @click.option("--project", "-p", type=click.Path(exists=True), help="Project root directory")
-@click.option("--mode", type=click.Choice(["standard", "auto-ask", "plan", "bypass", "dont-ask"]), default="standard", help="Permission mode")
+@click.option(
+    "--mode",
+    type=click.Choice(["standard", "auto-ask", "plan", "bypass", "dont-ask"]),
+    default="standard",
+    help="Permission mode",
+)
 @click.pass_context
 def cli(ctx, project, mode):
     """X-Copilot — Self-growing AI agent for Windows."""
@@ -40,10 +45,12 @@ def start(ctx, test_mode):
     project_root = ctx.obj["project_root"]
     perm_mode = getattr(PermissionMode, ctx.obj["permission_mode"].upper())
 
-    console.print(Panel.fit(
-        "[bold cyan]X-Copilot[/bold cyan] — Self-growing AI agent for Windows",
-        subtitle="v0.1.0"
-    ))
+    console.print(
+        Panel.fit(
+            "[bold cyan]X-Copilot[/bold cyan] — Self-growing AI agent for Windows",
+            subtitle="v0.1.0",
+        )
+    )
 
     # Initialize components
     memory = MemoryEngine(project_root=str(project_root))
@@ -97,7 +104,9 @@ def start(ctx, test_mode):
             else:
                 console.print(f"[dim]Processing: {user_input}[/dim]")
                 # In full implementation, would use learner/planner/evaluator
-                console.print("[yellow]Full agent loop not yet implemented. Use CLI subcommands.[/yellow]")
+                console.print(
+                    "[yellow]Full agent loop not yet implemented. Use CLI subcommands.[/yellow]"
+                )
         except KeyboardInterrupt:
             console.print("\n[yellow]Interrupted. Type 'exit' to quit.[/yellow]")
         except EOFError:
@@ -142,6 +151,7 @@ def _show_skills(memory):
 
 def _build_graph(project_root):
     from xcopilot.core.graph import KnowledgeGraph
+
     graph = KnowledgeGraph()
     with console.status("[bold green]Building knowledge graph..."):
         graph.build(str(project_root))
@@ -151,6 +161,7 @@ def _build_graph(project_root):
 
 def _show_checkpoints(project_root):
     from xcopilot.core.checkpoint import CheckpointManager
+
     cp_mgr = CheckpointManager(checkpoints_dir=str(project_root / ".xcopilot" / "checkpoints"))
     checkpoints = cp_mgr.list_checkpoints()
     if checkpoints:
@@ -168,6 +179,7 @@ def _show_checkpoints(project_root):
 
 def _rewind_checkpoint(checkpoint_id, project_root):
     from xcopilot.core.checkpoint import CheckpointManager
+
     cp_mgr = CheckpointManager(checkpoints_dir=str(project_root / ".xcopilot" / "checkpoints"))
     if cp_mgr.rewind(checkpoint_id):
         console.print(f"[green]✓[/green] Rewound to {checkpoint_id}")
@@ -177,6 +189,7 @@ def _rewind_checkpoint(checkpoint_id, project_root):
 
 def _check_update():
     from xcopilot.core.updater import Updater
+
     updater = Updater()
     info = updater.check()
     console.print(f"[blue]Current: 0.1.0, Latest: {info.version}[/blue]")
@@ -186,6 +199,7 @@ def _check_update():
 def memory():
     """Show memory status."""
     from xcopilot.memory import MemoryEngine
+
     memory = MemoryEngine(project_root=Path.cwd())
     _show_memory_status(memory)
 
@@ -194,6 +208,7 @@ def memory():
 def skills():
     """List available skills."""
     from xcopilot.memory import MemoryEngine
+
     memory = MemoryEngine(project_root=Path.cwd())
     _show_skills(memory)
 
@@ -204,11 +219,14 @@ def skills():
 def skills_marketplace(repo, install):
     """Browse or install skills from marketplace."""
     from xcopilot.skills.marketplace import SkillsMarketplace
+
     marketplace = SkillsMarketplace()
 
     if install:
         project_root = Path.cwd()
-        skill_path = marketplace.install(repo or "addyosmani/agent-skills", install, str(project_root))
+        skill_path = marketplace.install(
+            repo or "addyosmani/agent-skills", install, str(project_root)
+        )
         if skill_path:
             console.print(f"[green]✓[/green] Installed {install} to {skill_path}")
         else:
@@ -247,12 +265,13 @@ def rewind(checkpoint_id):
 def update():
     """Check for and apply updates."""
     from xcopilot.core.updater import Updater
+
     updater = Updater()
 
     with console.status("[bold green]Checking for updates..."):
         info = updater.check()
 
-    console.print(f"Current version: [cyan]0.1.0[/cyan]")
+    console.print("Current version: [cyan]0.1.0[/cyan]")
     console.print(f"Latest version: [cyan]{info.version}[/cyan]")
     console.print(f"Channel: [dim]{info.channel}[/dim]")
 
@@ -282,6 +301,7 @@ def update():
 def fork(checkpoint_id, branch_name):
     """Create a new branch from a checkpoint."""
     from xcopilot.core.checkpoint import CheckpointManager
+
     cp_mgr = CheckpointManager(checkpoints_dir=str(Path.cwd() / ".xcopilot" / "checkpoints"))
     fork_id = cp_mgr.fork(checkpoint_id, branch_name)
     if fork_id:
@@ -294,6 +314,7 @@ def fork(checkpoint_id, branch_name):
 def tree():
     """Show checkpoint tree."""
     from xcopilot.core.checkpoint import CheckpointManager
+
     cp_mgr = CheckpointManager(checkpoints_dir=str(Path.cwd() / ".xcopilot" / "checkpoints"))
     checkpoints = cp_mgr.tree()
     if checkpoints:
@@ -310,10 +331,13 @@ def tree():
 
 
 @cli.command()
-@click.option("--mode", type=click.Choice(["default", "fast"]), default="default", help="Compaction mode")
+@click.option(
+    "--mode", type=click.Choice(["default", "fast"]), default="default", help="Compaction mode"
+)
 def compact(mode):
     """Compact conversation history."""
     from xcopilot.core.compaction import CompactionManager
+
     cm = CompactionManager()
     result = cm.compact(mode=mode)
     console.print(f"[green]✓[/green] Compacted ({mode} mode)")
@@ -324,6 +348,7 @@ def compact(mode):
 def context():
     """Show token budget breakdown."""
     from xcopilot.core.compaction import CompactionManager
+
     cm = CompactionManager()
     budget = cm.get_budget()
     console.print(f"Total: [cyan]{budget.total}[/cyan]")
@@ -339,6 +364,7 @@ def context():
 def permissions():
     """Show current permission mode."""
     from xcopilot.permission.pipeline import PermissionMode, PermissionPipeline
+
     for mode in PermissionMode:
         _pipeline = PermissionPipeline(mode)
         console.print(f"[cyan]{mode.value}[/cyan]: {mode.name}")

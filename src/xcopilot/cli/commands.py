@@ -18,6 +18,7 @@ def memory():
 def memory_status(ctx):
     """Show memory status."""
     from xcopilot.memory import MemoryEngine
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     memory = MemoryEngine(project_root=str(project_root))
     console.print("[blue]Memory Status:[/blue]")
@@ -29,14 +30,20 @@ def memory_status(ctx):
 
 
 @memory.command("clear")
-@click.option("--layer", type=click.Choice(["session", "episodic", "semantic", "procedural", "project", "all"]), default="session", help="Memory layer to clear")
+@click.option(
+    "--layer",
+    type=click.Choice(["session", "episodic", "semantic", "procedural", "project", "all"]),
+    default="session",
+    help="Memory layer to clear",
+)
 @click.pass_context
 def memory_clear(ctx, layer):
     """Clear memory layer(s)."""
     from xcopilot.memory import MemoryEngine
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     memory = MemoryEngine(project_root=str(project_root))
-    
+
     if layer in ("session", "all"):
         memory.session.clear()
         console.print("[green]✓[/green] Session memory cleared")
@@ -60,9 +67,10 @@ def memory_clear(ctx, layer):
 def memory_prune(ctx, days):
     """Prune old memory entries."""
     from xcopilot.memory import MemoryEngine
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     memory = MemoryEngine(project_root=str(project_root))
-    
+
     removed = memory.episodic.prune(days=days)
     console.print(f"[green]✓[/green] Pruned {removed} episodic entries older than {days} days")
 
@@ -77,6 +85,7 @@ def skills():
 def skills_list(ctx):
     """List available skills."""
     from xcopilot.memory import MemoryEngine
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     memory = MemoryEngine(project_root=str(project_root))
     skills = memory.procedural.list_skills()
@@ -97,17 +106,18 @@ def skills_list(ctx):
 def skills_create(ctx, name, description, instructions, triggers):
     """Create a new skill."""
     from xcopilot.memory import MemoryEngine
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     memory = MemoryEngine(project_root=str(project_root))
-    
+
     trigger_list = [t.strip() for t in triggers.split(",")] if triggers else [name]
-    
+
     skill_path = memory.procedural.create_skill(
         name=name,
         description=description,
         instructions=instructions,
         triggers=trigger_list,
-        compatible_agents=["xcopilot"]
+        compatible_agents=["xcopilot"],
     )
     console.print(f"[green]✓[/green] Created skill: {skill_path}")
 
@@ -119,9 +129,10 @@ def skills_create(ctx, name, description, instructions, triggers):
 def skills_install(ctx, skill_name, repo):
     """Install a skill from marketplace."""
     from xcopilot.skills.marketplace import SkillsMarketplace
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     marketplace = SkillsMarketplace()
-    
+
     skill_path = marketplace.install(repo, skill_name, str(project_root))
     if skill_path:
         console.print(f"[green]✓[/green] Installed {skill_name} from {repo}")
@@ -135,14 +146,16 @@ def skills_install(ctx, skill_name, repo):
 def skills_marketplace(ctx, search):
     """Browse skills marketplace."""
     from xcopilot.skills.marketplace import SkillsMarketplace
+
     marketplace = SkillsMarketplace()
-    
+
     if search:
         skills = marketplace.search(search)
     else:
         skills = marketplace.list_marketplace()
-    
+
     from rich.table import Table
+
     table = Table(title="Marketplace Skills")
     table.add_column("Name", style="cyan")
     table.add_column("Repo", style="dim")
@@ -162,12 +175,14 @@ def checkpoints():
 def checkpoints_list(ctx):
     """List checkpoints."""
     from xcopilot.core.checkpoint import CheckpointManager
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     cp_mgr = CheckpointManager(checkpoints_dir=str(project_root / ".xcopilot" / "checkpoints"))
     checkpoints = cp_mgr.list_checkpoints()
-    
+
     if checkpoints:
         from rich.table import Table
+
         table = Table(title="Checkpoints")
         table.add_column("ID", style="cyan")
         table.add_column("Timestamp", style="dim")
@@ -186,9 +201,10 @@ def checkpoints_list(ctx):
 def checkpoints_rewind(ctx, checkpoint_id):
     """Rewind to a checkpoint."""
     from xcopilot.core.checkpoint import CheckpointManager
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     cp_mgr = CheckpointManager(checkpoints_dir=str(project_root / ".xcopilot" / "checkpoints"))
-    
+
     if cp_mgr.rewind(checkpoint_id):
         console.print(f"[green]✓[/green] Rewound to {checkpoint_id}")
     else:
@@ -202,9 +218,10 @@ def checkpoints_rewind(ctx, checkpoint_id):
 def checkpoints_fork(ctx, checkpoint_id, branch_name):
     """Fork from a checkpoint."""
     from xcopilot.core.checkpoint import CheckpointManager
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     cp_mgr = CheckpointManager(checkpoints_dir=str(project_root / ".xcopilot" / "checkpoints"))
-    
+
     fork_id = cp_mgr.fork(checkpoint_id, branch_name)
     if fork_id:
         console.print(f"[green]✓[/green] Created branch: {fork_id}")
@@ -217,12 +234,14 @@ def checkpoints_fork(ctx, checkpoint_id, branch_name):
 def checkpoints_tree(ctx):
     """Show checkpoint tree."""
     from xcopilot.core.checkpoint import CheckpointManager
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     cp_mgr = CheckpointManager(checkpoints_dir=str(project_root / ".xcopilot" / "checkpoints"))
     checkpoints = cp_mgr.tree()
-    
+
     if checkpoints:
         from rich.table import Table
+
         table = Table(title="Checkpoint Tree")
         table.add_column("ID", style="cyan")
         table.add_column("Timestamp", style="dim")
@@ -245,6 +264,7 @@ def graph():
 def graph_build(ctx):
     """Build knowledge graph for current project."""
     from xcopilot.core.graph import KnowledgeGraph
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     graph = KnowledgeGraph()
     with console.status("[bold green]Building knowledge graph..."):
@@ -259,11 +279,12 @@ def graph_build(ctx):
 def graph_query(ctx, query):
     """Query knowledge graph."""
     from xcopilot.core.graph import KnowledgeGraph
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     graph = KnowledgeGraph()
     graph.build(str(project_root))
     results = graph.query(query)
-    
+
     if results:
         console.print(f"[blue]Results for '{query}':[/blue]")
         for r in results:
@@ -277,6 +298,7 @@ def graph_query(ctx, query):
 def graph_stats(ctx):
     """Show graph statistics."""
     from xcopilot.core.graph import KnowledgeGraph
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     graph = KnowledgeGraph()
     graph.build(str(project_root))
@@ -296,9 +318,10 @@ def update():
 def update_check(ctx):
     """Check for updates."""
     from xcopilot.core.updater import Updater
+
     updater = Updater()
     info = updater.check()
-    
+
     console.print("Current version: [cyan]0.1.0[/cyan]")
     console.print(f"Latest version: [cyan]{info.version}[/cyan]")
     console.print(f"Channel: [dim]{info.channel}[/dim]")
@@ -310,11 +333,12 @@ def update_check(ctx):
 def update_install(ctx):
     """Install latest update."""
     from xcopilot.core.updater import Updater
+
     updater = Updater()
-    
+
     with console.status("[bold green]Checking for updates..."):
         info = updater.check()
-    
+
     if info.version != "0.1.0":
         with console.status("[bold green]Downloading..."):
             path = updater.download(info)
@@ -334,8 +358,9 @@ def update_install(ctx):
 def update_rollback(ctx):
     """Rollback to previous version."""
     from xcopilot.core.updater import Updater
+
     updater = Updater()
-    
+
     if updater.rollback():
         console.print("[green]✓[/green] Rollback complete")
     else:
@@ -353,10 +378,11 @@ def config_show(ctx):
     """Show current configuration."""
     from xcopilot.core.planner import PlannerEngine
     from xcopilot.memory import MemoryEngine
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     planner = PlannerEngine(MemoryEngine(project_root=str(project_root)))
     planner.load()
-    
+
     profile = planner.profile
     console.print("[blue]Preferences:[/blue]")
     console.print(f"  Tools: {profile.preferred_tools}")
@@ -381,6 +407,7 @@ def config_reset(ctx):
     """Reset configuration to defaults."""
     from xcopilot.core.planner import PlannerEngine
     from xcopilot.memory import MemoryEngine
+
     project_root = ctx.obj.get("project_root", Path.cwd())
     planner = PlannerEngine(MemoryEngine(project_root=str(project_root)))
     planner.profile = type(planner.profile)()

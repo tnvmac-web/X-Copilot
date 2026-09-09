@@ -44,18 +44,35 @@ def test_plan_mode_denies_writes(pipeline: PermissionPipeline) -> None:
     """PLAN mode should DENY all write operations."""
     plan_pipeline = PermissionPipeline(PermissionMode.PLAN)
 
-    assert plan_pipeline.check(PermissionAction.EDIT_FILE, {"path": "test.py"}) == PermissionResult.DENY
-    assert plan_pipeline.check(PermissionAction.WRITE_FILE, {"path": "test.py"}) == PermissionResult.DENY
-    assert plan_pipeline.check(PermissionAction.SHELL_COMMAND, {"cmd": "ls"}) == PermissionResult.DENY
+    assert (
+        plan_pipeline.check(PermissionAction.EDIT_FILE, {"path": "test.py"})
+        == PermissionResult.DENY
+    )
+    assert (
+        plan_pipeline.check(PermissionAction.WRITE_FILE, {"path": "test.py"})
+        == PermissionResult.DENY
+    )
+    assert (
+        plan_pipeline.check(PermissionAction.SHELL_COMMAND, {"cmd": "ls"}) == PermissionResult.DENY
+    )
 
 
 def test_bypass_mode_allows_everything(pipeline: PermissionPipeline) -> None:
     """BYPASS mode should ALLOW everything."""
     bypass_pipeline = PermissionPipeline(PermissionMode.BYPASS)
 
-    assert bypass_pipeline.check(PermissionAction.EDIT_FILE, {"path": "test.py"}) == PermissionResult.ALLOW
-    assert bypass_pipeline.check(PermissionAction.SHELL_COMMAND, {"cmd": "rm -rf /"}) == PermissionResult.ALLOW
-    assert bypass_pipeline.check(PermissionAction.NETWORK_REQUEST, {"url": "http://evil.com"}) == PermissionResult.ALLOW
+    assert (
+        bypass_pipeline.check(PermissionAction.EDIT_FILE, {"path": "test.py"})
+        == PermissionResult.ALLOW
+    )
+    assert (
+        bypass_pipeline.check(PermissionAction.SHELL_COMMAND, {"cmd": "rm -rf /"})
+        == PermissionResult.ALLOW
+    )
+    assert (
+        bypass_pipeline.check(PermissionAction.NETWORK_REQUEST, {"url": "http://evil.com"})
+        == PermissionResult.ALLOW
+    )
 
 
 def test_dont_ask_mode_allows_non_destructive(pipeline: PermissionPipeline) -> None:
@@ -67,8 +84,13 @@ def test_dont_ask_mode_allows_non_destructive(pipeline: PermissionPipeline) -> N
     assert dont_ask.check(PermissionAction.SHELL_COMMAND, {"cmd": "ls"}) == PermissionResult.ALLOW
 
     # But still DENY destructive operations
-    assert dont_ask.check(PermissionAction.SHELL_COMMAND, {"cmd": "rm -rf /"}) == PermissionResult.DENY
-    assert dont_ask.check(PermissionAction.SHELL_COMMAND, {"cmd": "format c:"}) == PermissionResult.DENY
+    assert (
+        dont_ask.check(PermissionAction.SHELL_COMMAND, {"cmd": "rm -rf /"}) == PermissionResult.DENY
+    )
+    assert (
+        dont_ask.check(PermissionAction.SHELL_COMMAND, {"cmd": "format c:"})
+        == PermissionResult.DENY
+    )
 
 
 def test_destructive_commands_always_denied_in_standard(pipeline: PermissionPipeline) -> None:
@@ -96,11 +118,15 @@ def test_production_file_deletion_denied(pipeline: PermissionPipeline) -> None:
 
 def test_unknown_network_request_asked_in_standard(pipeline: PermissionPipeline) -> None:
     """Network requests to unknown endpoints should be ASK in STANDARD."""
-    result = pipeline.check(PermissionAction.NETWORK_REQUEST, {"url": "http://unknown-site.com/api"})
+    result = pipeline.check(
+        PermissionAction.NETWORK_REQUEST, {"url": "http://unknown-site.com/api"}
+    )
     assert result == PermissionResult.ASK
 
     # But known safe domains should be ALLOW
-    result = pipeline.check(PermissionAction.NETWORK_REQUEST, {"url": "https://api.github.com/user"})
+    result = pipeline.check(
+        PermissionAction.NETWORK_REQUEST, {"url": "https://api.github.com/user"}
+    )
     assert result == PermissionResult.ALLOW
 
 

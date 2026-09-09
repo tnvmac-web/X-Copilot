@@ -118,6 +118,7 @@ def test_watch_changes_returns_watcher(tmp_dir: Path, write_agents_md: Path) -> 
     assert watcher is not None
     # Should be an Observer instance
     from watchdog.observers import Observer
+
     assert isinstance(watcher, Observer)
 
     watcher.stop()

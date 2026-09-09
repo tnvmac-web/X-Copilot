@@ -52,11 +52,13 @@ class SearchTool:
                     content = filepath.read_text(encoding="utf-8", errors="ignore")
                     for i, line in enumerate(content.split("\n"), 1):
                         if regex.search(line):
-                            results.append(SearchResult(
-                                path=str(filepath),
-                                content=line.strip(),
-                                line=i,
-                            ))
+                            results.append(
+                                SearchResult(
+                                    path=str(filepath),
+                                    content=line.strip(),
+                                    line=i,
+                                )
+                            )
                             if len(results) >= max_results:
                                 return results
                 except (PermissionError, UnicodeDecodeError):
@@ -77,16 +79,15 @@ class SearchTool:
     def web_search(self, query: str, limit: int = 5) -> list[dict]:
         """Search the web using DuckDuckGo HTML."""
         try:
-            results = self.web.fetch(
-                f"https://html.duckduckgo.com/html/?q={query}"
-            )
+            results = self.web.fetch(f"https://html.duckduckgo.com/html/?q={query}")
             # Parse HTML results
             import re
+
             items = re.findall(
                 r'<a class="result__snippet".*?>(.*?)</a>',
                 results.text,
                 re.DOTALL,
             )
             return [{"snippet": item.strip()} for item in items[:limit]]
-        except Exception:
+        except ConnectionError:
             return []

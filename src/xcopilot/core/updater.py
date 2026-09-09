@@ -94,11 +94,15 @@ class Updater:
         """Save config to disk."""
         config_path = self.data_dir / "config.json"
         self.data_dir.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(json.dumps({
-            "mode": self.config.mode,
-            "channel": self.config.channel,
-            "auto_update": self.config.auto_update,
-        }))
+        config_path.write_text(
+            json.dumps(
+                {
+                    "mode": self.config.mode,
+                    "channel": self.config.channel,
+                    "auto_update": self.config.auto_update,
+                }
+            )
+        )
 
     def config_load(self) -> None:
         """Load config from disk."""

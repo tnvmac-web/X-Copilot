@@ -12,7 +12,7 @@ Tests cover:
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -50,21 +50,27 @@ def test_add_fact(semantic_mem: SemanticMemory) -> None:
 
 def test_search_returns_relevant_results(semantic_mem: SemanticMemory) -> None:
     """search should return semantically relevant facts."""
-    semantic_mem.add(SemanticFact(
-        content="User likes dark mode in editors",
-        project="/test/project",
-        type="preference",
-    ))
-    semantic_mem.add(SemanticFact(
-        content="User prefers light theme for terminal",
-        project="/test/project",
-        type="preference",
-    ))
-    semantic_mem.add(SemanticFact(
-        content="Database connection string format",
-        project="/test/project",
-        type="technical",
-    ))
+    semantic_mem.add(
+        SemanticFact(
+            content="User likes dark mode in editors",
+            project="/test/project",
+            type="preference",
+        )
+    )
+    semantic_mem.add(
+        SemanticFact(
+            content="User prefers light theme for terminal",
+            project="/test/project",
+            type="preference",
+        )
+    )
+    semantic_mem.add(
+        SemanticFact(
+            content="Database connection string format",
+            project="/test/project",
+            type="technical",
+        )
+    )
 
     results = semantic_mem.search("dark mode editor", k=5)
     assert len(results) >= 1
@@ -73,16 +79,20 @@ def test_search_returns_relevant_results(semantic_mem: SemanticMemory) -> None:
 
 def test_search_filters_by_project(semantic_mem: SemanticMemory) -> None:
     """search should filter by project when specified."""
-    semantic_mem.add(SemanticFact(
-        content="Project A specific fact",
-        project="/project/a",
-        type="note",
-    ))
-    semantic_mem.add(SemanticFact(
-        content="Project B specific fact",
-        project="/project/b",
-        type="note",
-    ))
+    semantic_mem.add(
+        SemanticFact(
+            content="Project A specific fact",
+            project="/project/a",
+            type="note",
+        )
+    )
+    semantic_mem.add(
+        SemanticFact(
+            content="Project B specific fact",
+            project="/project/b",
+            type="note",
+        )
+    )
 
     results_a = semantic_mem.search("specific fact", k=5, project="/project/a")
     results_b = semantic_mem.search("specific fact", k=5, project="/project/b")
@@ -94,11 +104,13 @@ def test_search_filters_by_project(semantic_mem: SemanticMemory) -> None:
 def test_search_respects_k(semantic_mem: SemanticMemory) -> None:
     """search should respect the k parameter."""
     for i in range(10):
-        semantic_mem.add(SemanticFact(
-            content=f"Fact number {i}",
-            project="/test/project",
-            type="note",
-        ))
+        semantic_mem.add(
+            SemanticFact(
+                content=f"Fact number {i}",
+                project="/test/project",
+                type="note",
+            )
+        )
 
     results = semantic_mem.search("Fact number", k=3)
     assert len(results) == 3
@@ -115,7 +127,7 @@ def test_decay_marks_old_facts(semantic_mem: SemanticMemory) -> None:
     semantic_mem.add(old_fact)
 
     # Update access to make it old
-    old_time = (datetime.now(timezone.utc) - timedelta(days=100)).timestamp()
+    old_time = (datetime.now(UTC) - timedelta(days=100)).timestamp()
     semantic_mem.collection.update(
         ids=[old_fact.id],
         metadatas=[{"last_accessed": old_time}],
@@ -141,11 +153,13 @@ def test_decay_marks_old_facts(semantic_mem: SemanticMemory) -> None:
 
 def test_decay_returns_zero_for_fresh_collection(semantic_mem: SemanticMemory) -> None:
     """decay should return 0 when no facts are old enough."""
-    semantic_mem.add(SemanticFact(
-        content="Fresh fact",
-        project="/test/project",
-        type="preference",
-    ))
+    semantic_mem.add(
+        SemanticFact(
+            content="Fresh fact",
+            project="/test/project",
+            type="preference",
+        )
+    )
     decayed = semantic_mem.decay(days=1)  # Very short threshold
     # Facts created now should not be older than 1 day
     assert isinstance(decayed, int)
@@ -174,16 +188,20 @@ def test_empty_search_returns_empty(semantic_mem: SemanticMemory) -> None:
 
 def test_multiple_projects_isolated(semantic_mem: SemanticMemory) -> None:
     """Facts from different projects should not leak."""
-    semantic_mem.add(SemanticFact(
-        content="Secret project A info",
-        project="/secret/a",
-        type="note",
-    ))
-    semantic_mem.add(SemanticFact(
-        content="Public project B info",
-        project="/public/b",
-        type="note",
-    ))
+    semantic_mem.add(
+        SemanticFact(
+            content="Secret project A info",
+            project="/secret/a",
+            type="note",
+        )
+    )
+    semantic_mem.add(
+        SemanticFact(
+            content="Public project B info",
+            project="/public/b",
+            type="note",
+        )
+    )
 
     results_a = semantic_mem.search("secret", k=5, project="/secret/a")
     results_b = semantic_mem.search("public", k=5, project="/public/b")
@@ -234,11 +252,13 @@ def test_delete_nonexistent_fact(semantic_mem: SemanticMemory) -> None:
 def test_clear(semantic_mem: SemanticMemory) -> None:
     """clear should remove all facts from the collection."""
     for i in range(5):
-        semantic_mem.add(SemanticFact(
-            content=f"Fact {i}",
-            project="/test/project",
-            type="note",
-        ))
+        semantic_mem.add(
+            SemanticFact(
+                content=f"Fact {i}",
+                project="/test/project",
+                type="note",
+            )
+        )
 
     assert semantic_mem.collection.count() == 5
     semantic_mem.clear()
@@ -247,21 +267,27 @@ def test_clear(semantic_mem: SemanticMemory) -> None:
 
 def test_search_filters_by_type(semantic_mem: SemanticMemory) -> None:
     """search should filter by type when specified."""
-    semantic_mem.add(SemanticFact(
-        content="Preference fact",
-        project="/test/project",
-        type="preference",
-    ))
-    semantic_mem.add(SemanticFact(
-        content="Technical fact",
-        project="/test/project",
-        type="technical",
-    ))
-    semantic_mem.add(SemanticFact(
-        content="Another preference",
-        project="/test/project",
-        type="preference",
-    ))
+    semantic_mem.add(
+        SemanticFact(
+            content="Preference fact",
+            project="/test/project",
+            type="preference",
+        )
+    )
+    semantic_mem.add(
+        SemanticFact(
+            content="Technical fact",
+            project="/test/project",
+            type="technical",
+        )
+    )
+    semantic_mem.add(
+        SemanticFact(
+            content="Another preference",
+            project="/test/project",
+            type="preference",
+        )
+    )
 
     pref_results = semantic_mem.search("fact", k=5, type="preference")
     tech_results = semantic_mem.search("fact", k=5, type="technical")
@@ -272,7 +298,7 @@ def test_search_filters_by_type(semantic_mem: SemanticMemory) -> None:
 
 def test_fact_properties_after_add(semantic_mem: SemanticMemory) -> None:
     """Fact properties should be preserved after add and search."""
-    now = datetime.now(timezone.utc)
+    datetime.now(UTC)
     fact = SemanticFact(
         content="Complete fact",
         project="/test/project",

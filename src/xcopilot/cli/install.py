@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import click
 from pathlib import Path
+
+import click
 from rich.console import Console
 
 console = Console()
@@ -11,7 +12,12 @@ console = Console()
 
 @click.command()
 @click.option("--output", "-o", type=click.Path(), default="install.ps1", help="Output file path")
-@click.option("--channel", type=click.Choice(["stable", "beta", "nightly"]), default="stable", help="Release channel")
+@click.option(
+    "--channel",
+    type=click.Choice(["stable", "beta", "nightly"]),
+    default="stable",
+    help="Release channel",
+)
 @click.option("--version", default="0.1.0", help="Version to install")
 def install(output, channel, version):
     """Generate PowerShell installer script."""
@@ -217,7 +223,7 @@ catch {{
     exit 1
 }}
 '''
-    
+
     Path(output).write_text(installer_content, encoding="utf-8")
     console.print(f"[green]✓[/green] Generated installer: {output}")
 

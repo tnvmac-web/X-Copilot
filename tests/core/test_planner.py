@@ -99,7 +99,9 @@ def test_profile_merges_global_and_project(tmp_path: Path) -> None:
     # Project config
     project_config = tmp_path / ".xcopilot" / "config.json"
     project_config.parent.mkdir(parents=True, exist_ok=True)
-    project_config.write_text('{"preferred_tools": ["write_file"], "conventions": {"money_as_cents": true}}')
+    project_config.write_text(
+        '{"preferred_tools": ["write_file"], "conventions": {"money_as_cents": true}}'
+    )
 
     planner = PlannerEngine(MemoryEngine(project_root=str(tmp_path)))
     planner.load()
@@ -112,4 +114,5 @@ def test_profile_merges_global_and_project(tmp_path: Path) -> None:
 
     # Cleanup
     import shutil
+
     shutil.rmtree(global_config.parent, ignore_errors=True)

@@ -19,6 +19,7 @@ class WebResponse:
     def json(self) -> dict:
         """Parse response as JSON."""
         import json
+
         return json.loads(self.text)
 
 
@@ -75,6 +76,7 @@ class WebTool:
 
         # Strip HTML tags for basic extraction
         import re
+
         text = re.sub(r"<script[^>]*>.*?</script>", "", text, flags=re.DOTALL)
         text = re.sub(r"<style[^>]*>.*?</style>", "", text, flags=re.DOTALL)
         text = re.sub(r"<[^>]+>", " ", text)

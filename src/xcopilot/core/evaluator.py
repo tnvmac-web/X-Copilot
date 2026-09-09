@@ -40,7 +40,7 @@ class Evaluator:
         eval_criteria = criteria or self.criteria
         breakdown = {}
 
-        for criterion, weight in eval_criteria.items():
+        for criterion in eval_criteria:
             if criterion == "correctness":
                 breakdown[criterion] = self._score_correctness(output)
             elif criterion == "style":
@@ -62,7 +62,7 @@ class Evaluator:
         """Evaluate output and return detailed result."""
         eval_criteria = criteria or self.criteria
         breakdown = {}
-        for criterion, weight in eval_criteria.items():
+        for criterion in eval_criteria:
             if criterion == "correctness":
                 breakdown[criterion] = self._score_correctness(output)
             elif criterion == "style":
@@ -149,9 +149,17 @@ class Evaluator:
                 score -= penalty
 
         # Network calls to unknown endpoints
-        if re.search(r"(requests|urllib|httpx)\.(get|post|put|delete)\s*\(\s*[\"'][^\"']*[\"']", output):
+        if re.search(
+            r"(requests|urllib|httpx)\.(get|post|put|delete)\s*\(\s*[\"'][^\"']*[\"']", output
+        ):
             # Allow known safe domains
-            safe_domains = ["api.github.com", "api.openai.com", "api.anthropic.com", "localhost", "127.0.0.1"]
+            safe_domains = [
+                "api.github.com",
+                "api.openai.com",
+                "api.anthropic.com",
+                "localhost",
+                "127.0.0.1",
+            ]
             if not any(domain in output for domain in safe_domains):
                 score -= 0.15
 

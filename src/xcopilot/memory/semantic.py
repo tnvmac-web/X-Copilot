@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 try:
     import chromadb
     from chromadb.config import Settings
+
     CHROMADB_AVAILABLE = True
 except ImportError:
     CHROMADB_AVAILABLE = False
@@ -27,8 +27,8 @@ class SemanticFact:
     type: str = "note"
     metadata: dict = field(default_factory=dict)
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    last_accessed: Optional[datetime] = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    last_accessed: datetime | None = None
     decayed: bool = False
 
 
@@ -37,9 +37,7 @@ class SemanticMemory:
 
     def __init__(self, persist_dir: str = "~/.xcopilot/memory/chroma") -> None:
         if not CHROMADB_AVAILABLE:
-            raise RuntimeError(
-                "chromadb is not installed. Install with: pip install chromadb"
-            )
+            raise RuntimeError("chromadb is not installed. Install with: pip install chromadb")
 
         self.persist_dir = Path(persist_dir).expanduser()
         self.persist_dir.mkdir(parents=True, exist_ok=True)
@@ -78,8 +76,8 @@ class SemanticMemory:
         self,
         query: str,
         k: int = 5,
-        project: Optional[str] = None,
-        type: Optional[str] = None,
+        project: str | None = None,
+        type: str | None = None,
     ) -> list[SemanticFact]:
         """Search for semantically similar facts. Returns list of SemanticFact."""
         # Build where filter for ChromaDB v1.x.
@@ -114,17 +112,13 @@ class SemanticMemory:
 
                 created_at_str = meta.get("created_at", "")
                 created_at = (
-                    datetime.fromisoformat(created_at_str)
-                    if created_at_str
-                    else datetime.now(timezone.utc)
+                    datetime.fromisoformat(created_at_str) if created_at_str else datetime.now(UTC)
                 )
 
                 # last_accessed stored as timestamp float
                 last_accessed_ts = meta.get("last_accessed")
                 last_accessed = (
-                    datetime.fromtimestamp(last_accessed_ts, tz=timezone.utc)
-                    if last_accessed_ts
-                    else None
+                    datetime.fromtimestamp(last_accessed_ts, tz=UTC) if last_accessed_ts else None
                 )
 
                 fact = SemanticFact(
@@ -158,7 +152,7 @@ class SemanticMemory:
         Facts whose last_accessed is older than `days` are removed.
         Returns the count of deleted facts.
         """
-        cutoff_ts = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff_ts = datetime.now(UTC) - timedelta(days=days)
         cutoff_timestamp = cutoff_ts.timestamp()
 
         # Get all facts with last_accessed older than cutoff
@@ -175,7 +169,7 @@ class SemanticMemory:
 
     def update_access(self, fact_id: str) -> None:
         """Update the last_accessed timestamp for a fact after retrieval."""
-        now_ts = datetime.now(timezone.utc).timestamp()
+        now_ts = datetime.now(UTC).timestamp()
         self.collection.update(
             ids=[fact_id],
             metadatas=[{"last_accessed": now_ts}],

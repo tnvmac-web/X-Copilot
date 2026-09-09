@@ -91,7 +91,7 @@ class CheckpointManager:
         for session_dir in self.checkpoints_dir.iterdir():
             cp_file = session_dir / f"{checkpoint_id}.json"
             if cp_file.exists():
-                checkpoint = json.loads(cp_file.read_text())
+                json.loads(cp_file.read_text())
                 # In real implementation, would restore from backup
                 # For now, return success
                 return True

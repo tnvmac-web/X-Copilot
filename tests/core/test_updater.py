@@ -34,6 +34,7 @@ def test_download_creates_asset(updater: Updater) -> None:
 def test_verify_checksum() -> None:
     """verify should check SHA-256 checksum."""
     from xcopilot.core.updater import Updater
+
     updater = Updater()
     # Verify method exists
     assert hasattr(updater, "verify")

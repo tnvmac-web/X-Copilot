@@ -72,14 +72,16 @@ class ProjectMemory:
             if heading_match:
                 # Save previous rule if exists
                 if current_title:
-                    rules.append(ProjectRule(
-                        title=current_title,
-                        content="\n".join(current_content).strip(),
-                        level=current_level,
-                        source_file=str(file_path),
-                        line_start=start_line,
-                        line_end=i - 1,
-                    ))
+                    rules.append(
+                        ProjectRule(
+                            title=current_title,
+                            content="\n".join(current_content).strip(),
+                            level=current_level,
+                            source_file=str(file_path),
+                            line_start=start_line,
+                            line_end=i - 1,
+                        )
+                    )
 
                 # Start new rule
                 current_level = len(heading_match.group(1))
@@ -91,14 +93,16 @@ class ProjectMemory:
 
         # Save last rule
         if current_title:
-            rules.append(ProjectRule(
-                title=current_title,
-                content="\n".join(current_content).strip(),
-                level=current_level,
-                source_file=str(file_path),
-                line_start=start_line,
-                line_end=len(lines) - 1,
-            ))
+            rules.append(
+                ProjectRule(
+                    title=current_title,
+                    content="\n".join(current_content).strip(),
+                    level=current_level,
+                    source_file=str(file_path),
+                    line_start=start_line,
+                    line_end=len(lines) - 1,
+                )
+            )
 
         return rules
 

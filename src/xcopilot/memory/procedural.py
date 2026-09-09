@@ -48,7 +48,7 @@ class ProceduralMemory:
             raise ValueError(f"Invalid YAML in {skill_path}: {e}") from e
 
         if not isinstance(frontmatter, dict):
-            raise ValueError(f"Frontmatter must be a dict in {skill_path}")
+            raise TypeError(f"Frontmatter must be a dict in {skill_path}")
 
         return SkillData(
             name=frontmatter.get("name", skill_path.parent.name),

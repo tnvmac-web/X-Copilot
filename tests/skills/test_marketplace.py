@@ -26,8 +26,8 @@ def test_install_skill(marketplace: SkillsMarketplace, tmp_path: Path) -> None:
     """install should download and create skill."""
     project_root = tmp_path / "project"
     project_root.mkdir()
-    
-    skill_path = marketplace.install("addyosmani/agent-skills", "code-review", str(project_root))
+
+    marketplace.install("addyosmani/agent-skills", "code-review", str(project_root))
     # Mock: returns None or path
 
 

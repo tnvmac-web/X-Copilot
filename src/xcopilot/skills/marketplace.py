@@ -6,6 +6,7 @@ import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import ClassVar
 
 
 @dataclass
@@ -24,7 +25,7 @@ class SkillsMarketplace:
     """Client for the agent-skills marketplace (GitHub-based)."""
 
     # Known skill repositories
-    REPOS = [
+    REPOS: ClassVar[list[str]] = [
         "anthropics/skills",
         "addyosmani/agent-skills",
         "vercel-labs/agent-skills",
@@ -71,7 +72,11 @@ class SkillsMarketplace:
                 url="https://github.com/vercel-labs/agent-skills/tree/main/skills/deploy",
             ),
         ]
-        return [s for s in mock_skills if query.lower() in s.name.lower() or query.lower() in s.description.lower()]
+        return [
+            s
+            for s in mock_skills
+            if query.lower() in s.name.lower() or query.lower() in s.description.lower()
+        ]
 
     def install(self, repo: str, skill_name: str, project_root: str) -> str | None:
         """Install a skill from marketplace to project."""

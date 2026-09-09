@@ -13,6 +13,7 @@ from xcopilot.memory.procedural import ProceduralMemory
 # Fixtures
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def tmp_dir(tmp_path: Path) -> Path:
     """Create a temporary directory with a .xcopilot/skills/ subdir."""
@@ -48,6 +49,7 @@ def write_sample_skill(tmp_dir: Path, sample_skill_yaml: str) -> Path:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 def test_load_skill_parses_frontmatter(tmp_dir: Path, sample_skill_yaml: str) -> None:
     """load_skill should parse YAML frontmatter and return a SkillData object."""
@@ -157,6 +159,7 @@ def test_list_skills_scans_global_dir(tmp_path: Path, monkeypatch: pytest.Monkey
         assert "test-skill" in names
     finally:
         import shutil
+
         shutil.rmtree(global_skills, ignore_errors=True)
 
 

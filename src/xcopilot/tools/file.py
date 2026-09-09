@@ -53,7 +53,7 @@ class FileTool:
 
     def patch(self, path: str, diff: dict) -> str:
         """Apply a diff-like edit (old/new replacements)."""
-        content = self.read(path)
+        self.read(path)
         old = diff.get("old", "")
         new = diff.get("new", "")
         return self.edit(path, old, new)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -45,9 +45,15 @@ def test_append_event(episodic_mem: EpisodicMemory) -> None:
 
 def test_query_filters_by_project(episodic_mem: EpisodicMemory) -> None:
     """query should filter by project."""
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={}, project="/proj/a", session_id="s1"))
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={}, project="/proj/b", session_id="s1"))
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={}, project="/proj/a", session_id="s2"))
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={}, project="/proj/a", session_id="s1")
+    )
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={}, project="/proj/b", session_id="s1")
+    )
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={}, project="/proj/a", session_id="s2")
+    )
 
     proj_a = episodic_mem.query(project="/proj/a", limit=10)
     assert len(proj_a) == 2
@@ -60,8 +66,12 @@ def test_query_filters_by_project(episodic_mem: EpisodicMemory) -> None:
 
 def test_query_filters_by_type(episodic_mem: EpisodicMemory) -> None:
     """query should filter by event type."""
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={}, project="/test", session_id="s1"))
-    episodic_mem.append(EpisodicEvent(type="user_edit", payload={}, project="/test", session_id="s1"))
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={}, project="/test", session_id="s1")
+    )
+    episodic_mem.append(
+        EpisodicEvent(type="user_edit", payload={}, project="/test", session_id="s1")
+    )
     episodic_mem.append(EpisodicEvent(type="error", payload={}, project="/test", session_id="s1"))
 
     tool_calls = episodic_mem.query(project="/test", type="tool_call", limit=10)
@@ -72,7 +82,9 @@ def test_query_filters_by_type(episodic_mem: EpisodicMemory) -> None:
 def test_query_limit(episodic_mem: EpisodicMemory) -> None:
     """query should respect limit."""
     for i in range(5):
-        episodic_mem.append(EpisodicEvent(type="tool_call", payload={"i": i}, project="/test", session_id="s1"))
+        episodic_mem.append(
+            EpisodicEvent(type="tool_call", payload={"i": i}, project="/test", session_id="s1")
+        )
 
     limited = episodic_mem.query(project="/test", limit=3)
     assert len(limited) == 3
@@ -80,7 +92,7 @@ def test_query_limit(episodic_mem: EpisodicMemory) -> None:
 
 def test_query_orders_by_timestamp_desc(episodic_mem: EpisodicMemory) -> None:
     """query should return newest events first."""
-    base = datetime(2026, 1, 1, 12, 0, 0)
+    base = datetime(2026, 1, 1, 12, 0, 0, tzinfo=UTC)
     for i in range(3):
         event = EpisodicEvent(
             type="tool_call",
@@ -100,11 +112,27 @@ def test_query_orders_by_timestamp_desc(episodic_mem: EpisodicMemory) -> None:
 
 def test_prune_removes_old_events(episodic_mem: EpisodicMemory) -> None:
     """prune should remove events older than specified days."""
-    old_ts = datetime.now() - timedelta(days=100)
-    recent_ts = datetime.now() - timedelta(days=10)
+    old_ts = datetime.now(UTC) - timedelta(days=100)
+    recent_ts = datetime.now(UTC) - timedelta(days=10)
 
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={"old": True}, project="/test", session_id="s1", timestamp=old_ts))
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={"recent": True}, project="/test", session_id="s1", timestamp=recent_ts))
+    episodic_mem.append(
+        EpisodicEvent(
+            type="tool_call",
+            payload={"old": True},
+            project="/test",
+            session_id="s1",
+            timestamp=old_ts,
+        )
+    )
+    episodic_mem.append(
+        EpisodicEvent(
+            type="tool_call",
+            payload={"recent": True},
+            project="/test",
+            session_id="s1",
+            timestamp=recent_ts,
+        )
+    )
 
     # Prune events older than 90 days
     removed = episodic_mem.prune(days=90)
@@ -117,14 +145,18 @@ def test_prune_removes_old_events(episodic_mem: EpisodicMemory) -> None:
 
 def test_prune_no_events_returns_zero(episodic_mem: EpisodicMemory) -> None:
     """prune should return 0 when no events to remove."""
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={}, project="/test", session_id="s1"))
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={}, project="/test", session_id="s1")
+    )
     removed = episodic_mem.prune(days=90)
     assert removed == 0
 
 
 def test_jsonl_backup_created(episodic_mem: EpisodicMemory, tmp_dir: Path) -> None:
     """append should also write to JSONL backup."""
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={"key": "val"}, project="/test", session_id="s1"))
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={"key": "val"}, project="/test", session_id="s1")
+    )
 
     jsonl_path = tmp_dir / "episodic.jsonl"
     assert jsonl_path.exists()
@@ -137,8 +169,12 @@ def test_jsonl_backup_created(episodic_mem: EpisodicMemory, tmp_dir: Path) -> No
 
 def test_multiple_sessions_isolated(episodic_mem: EpisodicMemory) -> None:
     """Events from different sessions should be queryable."""
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={"a": 1}, project="/test", session_id="sess_a"))
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={"b": 2}, project="/test", session_id="sess_b"))
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={"a": 1}, project="/test", session_id="sess_a")
+    )
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={"b": 2}, project="/test", session_id="sess_b")
+    )
 
     sess_a = episodic_mem.query(project="/test", session_id="sess_a", limit=10)
     sess_b = episodic_mem.query(project="/test", session_id="sess_b", limit=10)
@@ -151,8 +187,12 @@ def test_multiple_sessions_isolated(episodic_mem: EpisodicMemory) -> None:
 
 def test_query_with_session_id_filter(episodic_mem: EpisodicMemory) -> None:
     """query should filter by session_id when provided."""
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={}, project="/test", session_id="sess_a"))
-    episodic_mem.append(EpisodicEvent(type="tool_call", payload={}, project="/test", session_id="sess_b"))
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={}, project="/test", session_id="sess_a")
+    )
+    episodic_mem.append(
+        EpisodicEvent(type="tool_call", payload={}, project="/test", session_id="sess_b")
+    )
 
     filtered = episodic_mem.query(project="/test", session_id="sess_a", limit=10)
     assert len(filtered) == 1

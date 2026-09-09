@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -22,7 +22,7 @@ class EpisodicEvent:
 
     def __post_init__(self):
         if self.timestamp is None:
-            self.timestamp = datetime.now()
+            self.timestamp = datetime.now(UTC)
         if self.payload is None:
             self.payload = {}
 
@@ -148,7 +148,8 @@ class EpisodicMemory:
     def prune(self, days: int = 90) -> int:
         """Remove events older than specified days. Returns count removed."""
         from datetime import timedelta
-        cutoff = datetime.now() - timedelta(days=days)
+
+        cutoff = datetime.now(UTC) - timedelta(days=days)
         cutoff_iso = cutoff.isoformat()
 
         with sqlite3.connect(self.db_path) as conn:
