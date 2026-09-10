@@ -12,6 +12,7 @@ import httpx
 
 class ModelProvider(Enum):
     """Supported model providers."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     OLLAMA = "ollama"
@@ -27,6 +28,7 @@ class ModelProvider(Enum):
 
 class ModelCapability(Enum):
     """Model capabilities."""
+
     CHAT = "chat"
     STREAMING = "streaming"
     EMBEDDINGS = "embeddings"
@@ -38,6 +40,7 @@ class ModelCapability(Enum):
 @dataclass
 class ModelInfo:
     """Information about a model."""
+
     id: str
     name: str
     provider: ModelProvider
@@ -51,6 +54,7 @@ class ModelInfo:
 @dataclass
 class ChatMessage:
     """Chat message."""
+
     role: str  # system, user, assistant, tool
     content: str
     name: str | None = None
@@ -61,6 +65,7 @@ class ChatMessage:
 @dataclass
 class ChatResponse:
     """Chat completion response."""
+
     content: str
     model: str
     provider: ModelProvider
@@ -73,6 +78,7 @@ class ChatResponse:
 @dataclass
 class EmbeddingResponse:
     """Embedding response."""
+
     embeddings: list[list[float]]
     model: str
     provider: ModelProvider

@@ -15,6 +15,7 @@ import httpx
 @dataclass
 class MarketplaceSkill:
     """A skill from any marketplace."""
+
     name: str
     source: str  # github, anthropic, scientific, diagram, langchain
     repo: str
@@ -88,6 +89,7 @@ class GitHubSkillsSource(SkillSource):
                             skill_resp = await client.get(skill_url, headers=headers)
                             if skill_resp.status_code == 200:
                                 import base64
+
                                 content = base64.b64decode(skill_resp.json()["content"]).decode()
                                 skill = self._parse_skill_md(content, skill_name, repo)
                                 if skill:
@@ -108,6 +110,7 @@ class GitHubSkillsSource(SkillSource):
                 return None
 
             import yaml
+
             frontmatter = yaml.safe_load(parts[1])
             instructions = parts[2].strip()
 
@@ -131,7 +134,8 @@ class GitHubSkillsSource(SkillSource):
 
         query_lower = query.lower()
         return [
-            s for s in self._skills_cache
+            s
+            for s in self._skills_cache
             if query_lower in s.name.lower() or query_lower in s.description.lower()
         ]
 
@@ -174,6 +178,7 @@ class GitHubSkillsSource(SkillSource):
         # Write SKILL.md
         skill_md = "---\n"
         import yaml
+
         frontmatter = skill.metadata.get("frontmatter", {})
         frontmatter["name"] = skill.name
         skill_md += yaml.dump(frontmatter, default_flow_style=False, sort_keys=False)
@@ -203,7 +208,8 @@ class AnthropicCybersecuritySkillsSource(SkillSource):
 
         query_lower = query.lower()
         return [
-            s for s in self._skills_cache
+            s
+            for s in self._skills_cache
             if query_lower in s.name.lower() or query_lower in s.description.lower()
         ]
 
@@ -223,14 +229,18 @@ class AnthropicCybersecuritySkillsSource(SkillSource):
                     for item in tree:
                         if item["path"].endswith("SKILL.md") or item["path"].endswith(".md"):
                             # Fetch skill content
-                            skill_url = f"https://raw.githubusercontent.com/{self.REPO}/main/{item['path']}"
+                            skill_url = (
+                                f"https://raw.githubusercontent.com/{self.REPO}/main/{item['path']}"
+                            )
                             skill_resp = await client.get(skill_url)
                             if skill_resp.status_code == 200:
                                 skill = self._parse_skill(skill_resp.text, item["path"])
                                 if skill:
                                     self._skills_cache.append(skill)
                 elif response.status_code == 403:
-                    print(f"GitHub API rate limited for {self.REPO}. Using cached skills if available.")
+                    print(
+                        f"GitHub API rate limited for {self.REPO}. Using cached skills if available."
+                    )
         except (httpx.HTTPError, ValueError, KeyError) as e:
             print(f"Error fetching cybersecurity skills: {e}")
 
@@ -257,6 +267,7 @@ class AnthropicCybersecuritySkillsSource(SkillSource):
                 parts = content.split("---", 2)
                 if len(parts) >= 3:
                     import yaml
+
                     frontmatter = yaml.safe_load(parts[1])
                     return MarketplaceSkill(
                         name=frontmatter.get("name", path.split("/")[-2]),
@@ -282,6 +293,7 @@ class AnthropicCybersecuritySkillsSource(SkillSource):
 
         skill_md = "---\n"
         import yaml
+
         frontmatter = skill.metadata.get("frontmatter", {})
         frontmatter["name"] = skill.name
         skill_md += yaml.dump(frontmatter, default_flow_style=False, sort_keys=False)
@@ -311,7 +323,8 @@ class ScientificSkillsSource(SkillSource):
 
         query_lower = query.lower()
         return [
-            s for s in self._skills_cache
+            s
+            for s in self._skills_cache
             if query_lower in s.name.lower() or query_lower in s.description.lower()
         ]
 
@@ -329,14 +342,18 @@ class ScientificSkillsSource(SkillSource):
                     tree = response.json()["tree"]
                     for item in tree:
                         if item["path"].endswith(".md") and "skills" in item["path"]:
-                            skill_url = f"https://raw.githubusercontent.com/{self.REPO}/main/{item['path']}"
+                            skill_url = (
+                                f"https://raw.githubusercontent.com/{self.REPO}/main/{item['path']}"
+                            )
                             skill_resp = await client.get(skill_url)
                             if skill_resp.status_code == 200:
                                 skill = self._parse_skill(skill_resp.text, item["path"])
                                 if skill:
                                     self._skills_cache.append(skill)
                 elif response.status_code == 403:
-                    print(f"GitHub API rate limited for {self.REPO}. Using cached skills if available.")
+                    print(
+                        f"GitHub API rate limited for {self.REPO}. Using cached skills if available."
+                    )
         except (httpx.HTTPError, ValueError, KeyError) as e:
             print(f"Error fetching scientific skills: {e}")
 
@@ -361,6 +378,7 @@ class ScientificSkillsSource(SkillSource):
                 parts = content.split("---", 2)
                 if len(parts) >= 3:
                     import yaml
+
                     frontmatter = yaml.safe_load(parts[1])
                     return MarketplaceSkill(
                         name=frontmatter.get("name", path.split("/")[-1].replace(".md", "")),
@@ -386,6 +404,7 @@ class ScientificSkillsSource(SkillSource):
 
         skill_md = "---\n"
         import yaml
+
         frontmatter = skill.metadata.get("frontmatter", {})
         frontmatter["name"] = skill.name
         skill_md += yaml.dump(frontmatter, default_flow_style=False, sort_keys=False)
@@ -414,33 +433,68 @@ class DiagramDesignSource(SkillSource):
 
         query_lower = query.lower()
         return [
-            s for s in self._skills_cache
+            s
+            for s in self._skills_cache
             if query_lower in s.name.lower() or query_lower in s.description.lower()
         ]
 
     async def sync(self) -> None:
         """Fetch diagram design skills (38 diagram types)."""
         diagram_types = [
-            "architecture", "flowchart", "sequence", "state", "er", "timeline",
-            "swimlane", "quadrant", "nested", "tree", "org-chart", "layers",
-            "venn", "pyramid", "radar", "polar", "loop", "funnel", "gantt",
-            "kanban", "mindmap", "network", "sankey", "sunburst", "treemap",
-            "chord", "force-directed", "hierarchical", "matrix", "parallel",
-            "radial", "spiral", "stream", "word-cloud", "heatmap", "scatter",
-            "bar-chart", "line-chart", "pie-chart",
+            "architecture",
+            "flowchart",
+            "sequence",
+            "state",
+            "er",
+            "timeline",
+            "swimlane",
+            "quadrant",
+            "nested",
+            "tree",
+            "org-chart",
+            "layers",
+            "venn",
+            "pyramid",
+            "radar",
+            "polar",
+            "loop",
+            "funnel",
+            "gantt",
+            "kanban",
+            "mindmap",
+            "network",
+            "sankey",
+            "sunburst",
+            "treemap",
+            "chord",
+            "force-directed",
+            "hierarchical",
+            "matrix",
+            "parallel",
+            "radial",
+            "spiral",
+            "stream",
+            "word-cloud",
+            "heatmap",
+            "scatter",
+            "bar-chart",
+            "line-chart",
+            "pie-chart",
         ]
 
         for dtype in diagram_types:
-            self._skills_cache.append(MarketplaceSkill(
-                name=f"diagram-{dtype}",
-                source="diagram_design",
-                repo=self.REPO,
-                description=f"Create {dtype.replace('-', ' ')} diagrams (HTML+SVG)",
-                triggers=[f"diagram {dtype}", f"create {dtype}", dtype],
-                compatible_agents=["xcopilot", "claude-code", "cursor"],
-                url=f"https://github.com/{self.REPO}/blob/main/{dtype}.html",
-                metadata={"diagram_type": dtype, "is_visual": True},
-            ))
+            self._skills_cache.append(
+                MarketplaceSkill(
+                    name=f"diagram-{dtype}",
+                    source="diagram_design",
+                    repo=self.REPO,
+                    description=f"Create {dtype.replace('-', ' ')} diagrams (HTML+SVG)",
+                    triggers=[f"diagram {dtype}", f"create {dtype}", dtype],
+                    compatible_agents=["xcopilot", "claude-code", "cursor"],
+                    url=f"https://github.com/{self.REPO}/blob/main/{dtype}.html",
+                    metadata={"diagram_type": dtype, "is_visual": True},
+                )
+            )
 
         cache_data = [
             {
@@ -470,7 +524,7 @@ name: {skill.name}
 description: {skill.description}
 triggers: {json.dumps(skill.triggers)}
 compatible_agents: {json.dumps(skill.compatible_agents)}
-tags: [diagram, visualization, {skill.metadata.get('diagram_type', '')}]
+tags: [diagram, visualization, {skill.metadata.get("diagram_type", "")}]
 ---
 # {skill.name} Diagram Skill
 
@@ -478,11 +532,11 @@ tags: [diagram, visualization, {skill.metadata.get('diagram_type', '')}]
 {skill.description}
 
 ## Usage
-This skill generates {skill.metadata.get('diagram_type', '').replace('-', ' ')} diagrams using the Diagram Design library.
+This skill generates {skill.metadata.get("diagram_type", "").replace("-", " ")} diagrams using the Diagram Design library.
 
 ## Examples
 ```bash
-# Generate a {skill.metadata.get('diagram_type', '').replace('-', ' ')} diagram
+# Generate a {skill.metadata.get("diagram_type", "").replace("-", " ")} diagram
 xcopilot skill run {skill.name} --data "your data"
 ```
 
@@ -511,7 +565,8 @@ class LangChainSkillsSource(SkillSource):
 
         query_lower = query.lower()
         return [
-            s for s in self._skills_cache
+            s
+            for s in self._skills_cache
             if query_lower in s.name.lower() or query_lower in s.description.lower()
         ]
 
@@ -578,6 +633,7 @@ class LangChainSkillsSource(SkillSource):
 
         skill_md = "---\n"
         import yaml
+
         frontmatter = {
             "name": skill.name,
             "description": skill.description,
@@ -593,7 +649,7 @@ class LangChainSkillsSource(SkillSource):
 {skill.description}
 
 ## Template
-This skill uses the `{skill.metadata.get('template', '')}` template from LangChain Skills.
+This skill uses the `{skill.metadata.get("template", "")}` template from LangChain Skills.
 
 ## Setup
 ```bash
@@ -614,7 +670,7 @@ Set required API keys:
         # Also create a template agent file
         template_dir = skill_dir / "templates"
         template_dir.mkdir(exist_ok=True)
-        
+
         if skill.metadata.get("template") == "deepagents_quickstart":
             agent_code = '''"""Deep Agents Quickstart - Research Agent."""
 from deepagents import create_deep_agent
@@ -661,7 +717,8 @@ class OpenVikingSkillsSource(SkillSource):
 
         query_lower = query.lower()
         return [
-            s for s in self._skills_cache
+            s
+            for s in self._skills_cache
             if query_lower in s.name.lower() or query_lower in s.description.lower()
         ]
 
@@ -674,13 +731,17 @@ class OpenVikingSkillsSource(SkillSource):
                 if response.status_code == 200:
                     tree = response.json()["tree"]
                     for item in tree:
-                        if ("connector" in item["path"].lower() or "skill" in item["path"].lower()) and item["path"].endswith((".yaml", ".yml", ".json")):
-                                skill_url = f"https://raw.githubusercontent.com/{self.REPO}/main/{item['path']}"
-                                skill_resp = await client.get(skill_url)
-                                if skill_resp.status_code == 200:
-                                    skill = self._parse_openviking(skill_resp.text, item["path"])
-                                    if skill:
-                                        self._skills_cache.append(skill)
+                        if (
+                            "connector" in item["path"].lower() or "skill" in item["path"].lower()
+                        ) and item["path"].endswith((".yaml", ".yml", ".json")):
+                            skill_url = (
+                                f"https://raw.githubusercontent.com/{self.REPO}/main/{item['path']}"
+                            )
+                            skill_resp = await client.get(skill_url)
+                            if skill_resp.status_code == 200:
+                                skill = self._parse_openviking(skill_resp.text, item["path"])
+                                if skill:
+                                    self._skills_cache.append(skill)
         except (httpx.HTTPError, ValueError, KeyError) as e:
             print(f"Error fetching OpenViking skills: {e}")
 
@@ -702,6 +763,7 @@ class OpenVikingSkillsSource(SkillSource):
     def _parse_openviking(self, content: str, path: str) -> MarketplaceSkill | None:
         try:
             import yaml
+
             data = yaml.safe_load(content)
             if isinstance(data, dict) and "name" in data:
                 return MarketplaceSkill(
@@ -728,6 +790,7 @@ class OpenVikingSkillsSource(SkillSource):
 
         skill_md = "---\n"
         import yaml
+
         frontmatter = {
             "name": skill.name,
             "description": skill.description,
@@ -744,7 +807,7 @@ class OpenVikingSkillsSource(SkillSource):
 
 ## Configuration
 ```yaml
-{json.dumps(skill.metadata.get('connector_config', {}), indent=2)}
+{json.dumps(skill.metadata.get("connector_config", {}), indent=2)}
 ```
 
 ## Reference
@@ -772,7 +835,8 @@ class AgentMemorySource(SkillSource):
 
         query_lower = query.lower()
         return [
-            s for s in self._skills_cache
+            s
+            for s in self._skills_cache
             if query_lower in s.name.lower() or query_lower in s.description.lower()
         ]
 
@@ -843,7 +907,9 @@ class UnifiedMarketplace:
             all_skills.extend(skill_list)
         return all_skills
 
-    async def install(self, skill_name: str, project_root: str, source: str | None = None) -> str | None:
+    async def install(
+        self, skill_name: str, project_root: str, source: str | None = None
+    ) -> str | None:
         """Install a skill from marketplace."""
         if source:
             if source in self.sources:

@@ -20,7 +20,7 @@ __all__ = [
 def register_all_providers(config: dict | None = None) -> None:
     """Register all available model providers."""
     config = config or {}
-    
+
     # Register providers with their configs
     if config.get("openai"):
         register_openai(config["openai"])
@@ -37,6 +37,7 @@ def register_all_providers(config: dict | None = None) -> None:
     # This allows local models to work out of the box
     try:
         import asyncio
+
         loop = asyncio.get_event_loop()
         if loop.is_running():
             # Can't run async here, will be checked on first use

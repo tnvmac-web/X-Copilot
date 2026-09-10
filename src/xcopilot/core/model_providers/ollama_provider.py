@@ -24,7 +24,9 @@ class OllamaProvider(ModelProviderBase):
 
     def __init__(self, config: dict):
         super().__init__(config)
-        self.base_url = config.get("base_url") or os.environ.get("OLLAMA_BASE_URL") or "http://localhost:11434"
+        self.base_url = (
+            config.get("base_url") or os.environ.get("OLLAMA_BASE_URL") or "http://localhost:11434"
+        )
         self._client = None
         self._models_cache: list[ModelInfo] = []
 
@@ -100,6 +102,7 @@ class OllamaProvider(ModelProviderBase):
             async for line in response.aiter_lines():
                 if line.strip():
                     import json
+
                     data = json.loads(line)
                     if "message" in data and data["message"].get("content"):
                         yield ChatResponse(
@@ -120,10 +123,13 @@ class OllamaProvider(ModelProviderBase):
         embeddings = []
         total_tokens = 0
         for text in texts:
-            response = await client.post("/api/embeddings", json={
-                "model": model,
-                "prompt": text,
-            })
+            response = await client.post(
+                "/api/embeddings",
+                json={
+                    "model": model,
+                    "prompt": text,
+                },
+            )
             response.raise_for_status()
             data = response.json()
             embeddings.append(data["embedding"])
@@ -157,18 +163,20 @@ class OllamaProvider(ModelProviderBase):
                 if "code" in model_name.lower():
                     capabilities.append(ModelCapability.FUNCTION_CALLING)
 
-                models.append(ModelInfo(
-                    id=model_name,
-                    name=model_name,
-                    provider=ModelProvider.OLLAMA,
-                    capabilities=capabilities,
-                    context_window=model_data.get("details", {}).get("context_length", 4096),
-                    metadata={
-                        "size": model_data.get("size", 0),
-                        "digest": model_data.get("digest", ""),
-                        "modified_at": model_data.get("modified_at", ""),
-                    },
-                ))
+                models.append(
+                    ModelInfo(
+                        id=model_name,
+                        name=model_name,
+                        provider=ModelProvider.OLLAMA,
+                        capabilities=capabilities,
+                        context_window=model_data.get("details", {}).get("context_length", 4096),
+                        metadata={
+                            "size": model_data.get("size", 0),
+                            "digest": model_data.get("digest", ""),
+                            "modified_at": model_data.get("modified_at", ""),
+                        },
+                    )
+                )
 
             self._models_cache = models
             return models
@@ -180,11 +188,14 @@ class OllamaProvider(ModelProviderBase):
     async def pull_model(self, model: str) -> AsyncIterator[dict]:
         """Pull a model from Ollama registry."""
         client = self._get_client()
-        async with client.stream("POST", "/api/pull", json={"name": model, "stream": True}) as response:
+        async with client.stream(
+            "POST", "/api/pull", json={"name": model, "stream": True}
+        ) as response:
             response.raise_for_status()
             async for line in response.aiter_lines():
                 if line.strip():
                     import json
+
                     yield json.loads(line)
 
     async def delete_model(self, model: str) -> bool:

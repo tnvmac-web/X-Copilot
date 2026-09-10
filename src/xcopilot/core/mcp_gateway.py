@@ -15,6 +15,7 @@ import httpx
 @dataclass
 class MCPServerConfig:
     """Configuration for an MCP server."""
+
     name: str
     transport: str  # stdio, sse
     command: str | None = None
@@ -26,6 +27,7 @@ class MCPServerConfig:
 @dataclass
 class MCPTool:
     """MCP tool definition."""
+
     name: str
     description: str
     inputSchema: dict
@@ -94,22 +96,28 @@ class MCPGateway:
             )
 
             # Initialize MCP connection
-            await self._send_mcp_request(name, {
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {},
-                    "clientInfo": {"name": "xcopilot", "version": "0.1.0"},
+            await self._send_mcp_request(
+                name,
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "xcopilot", "version": "0.1.0"},
+                    },
                 },
-            })
+            )
 
             # Send initialized notification
-            await self._send_mcp_request(name, {
-                "jsonrpc": "2.0",
-                "method": "notifications/initialized",
-            })
+            await self._send_mcp_request(
+                name,
+                {
+                    "jsonrpc": "2.0",
+                    "method": "notifications/initialized",
+                },
+            )
 
             return True
         except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as e:
@@ -126,16 +134,19 @@ class MCPGateway:
             self._clients[name] = client
 
             # Initialize via HTTP
-            response = await client.post("/mcp", json={
-                "jsonrpc": "2.0",
-                "id": 1,
-                "method": "initialize",
-                "params": {
-                    "protocolVersion": "2024-11-05",
-                    "capabilities": {},
-                    "clientInfo": {"name": "xcopilot", "version": "0.1.0"},
+            response = await client.post(
+                "/mcp",
+                json={
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "xcopilot", "version": "0.1.0"},
+                    },
                 },
-            })
+            )
             response.raise_for_status()
 
             return True
@@ -178,11 +189,14 @@ class MCPGateway:
         if name in self._tools_cache:
             return self._tools_cache[name]
 
-        response = await self._send_mcp_request(name, {
-            "jsonrpc": "2.0",
-            "id": 2,
-            "method": "tools/list",
-        })
+        response = await self._send_mcp_request(
+            name,
+            {
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/list",
+            },
+        )
 
         if response and "result" in response:
             tools = [
@@ -200,15 +214,18 @@ class MCPGateway:
 
     async def call_tool(self, name: str, tool_name: str, arguments: dict) -> Any:
         """Call a tool on an MCP server."""
-        response = await self._send_mcp_request(name, {
-            "jsonrpc": "2.0",
-            "id": 3,
-            "method": "tools/call",
-            "params": {
-                "name": tool_name,
-                "arguments": arguments,
+        response = await self._send_mcp_request(
+            name,
+            {
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tools/call",
+                "params": {
+                    "name": tool_name,
+                    "arguments": arguments,
+                },
             },
-        })
+        )
 
         if response and "result" in response:
             return response["result"]
@@ -218,11 +235,14 @@ class MCPGateway:
 
     async def list_resources(self, name: str) -> list[dict]:
         """List available resources from an MCP server."""
-        response = await self._send_mcp_request(name, {
-            "jsonrpc": "2.0",
-            "id": 4,
-            "method": "resources/list",
-        })
+        response = await self._send_mcp_request(
+            name,
+            {
+                "jsonrpc": "2.0",
+                "id": 4,
+                "method": "resources/list",
+            },
+        )
 
         if response and "result" in response:
             return response["result"].get("resources", [])
@@ -230,12 +250,15 @@ class MCPGateway:
 
     async def read_resource(self, name: str, uri: str) -> Any:
         """Read a resource from an MCP server."""
-        response = await self._send_mcp_request(name, {
-            "jsonrpc": "2.0",
-            "id": 5,
-            "method": "resources/read",
-            "params": {"uri": uri},
-        })
+        response = await self._send_mcp_request(
+            name,
+            {
+                "jsonrpc": "2.0",
+                "id": 5,
+                "method": "resources/read",
+                "params": {"uri": uri},
+            },
+        )
 
         if response and "result" in response:
             return response["result"]

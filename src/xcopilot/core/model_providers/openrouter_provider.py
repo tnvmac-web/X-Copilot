@@ -117,6 +117,7 @@ class OpenRouterProvider(ModelProviderBase):
                         break
                     if data_str:
                         import json
+
                         data = json.loads(data_str)
                         if data["choices"]:
                             delta = data["choices"][0].get("delta", {})
@@ -135,10 +136,13 @@ class OpenRouterProvider(ModelProviderBase):
     ) -> EmbeddingResponse:
         """Generate embeddings via OpenRouter (limited support)."""
         client = self._get_client()
-        response = await client.post("/embeddings", json={
-            "model": model,
-            "input": texts,
-        })
+        response = await client.post(
+            "/embeddings",
+            json={
+                "model": model,
+                "input": texts,
+            },
+        )
         response.raise_for_status()
         data = response.json()
 
@@ -195,20 +199,26 @@ class OpenRouterProvider(ModelProviderBase):
                 if "vision" in model_id.lower() or "multimodal" in model_id.lower():
                     capabilities.append(ModelCapability.VISION)
 
-                models.append(ModelInfo(
-                    id=model_id,
-                    name=model_data.get("name", model_id),
-                    provider=ModelProvider.OPENROUTER,
-                    capabilities=capabilities,
-                    context_window=context_window,
-                    max_output_tokens=model_data.get("top_provider", {}).get("max_completion_tokens", 4096),
-                    pricing={"input": input_price, "output": output_price} if input_price or output_price else {},
-                    metadata={
-                        "description": model_data.get("description", ""),
-                        "architecture": model_data.get("architecture", {}),
-                        "top_provider": model_data.get("top_provider", {}),
-                    },
-                ))
+                models.append(
+                    ModelInfo(
+                        id=model_id,
+                        name=model_data.get("name", model_id),
+                        provider=ModelProvider.OPENROUTER,
+                        capabilities=capabilities,
+                        context_window=context_window,
+                        max_output_tokens=model_data.get("top_provider", {}).get(
+                            "max_completion_tokens", 4096
+                        ),
+                        pricing={"input": input_price, "output": output_price}
+                        if input_price or output_price
+                        else {},
+                        metadata={
+                            "description": model_data.get("description", ""),
+                            "architecture": model_data.get("architecture", {}),
+                            "top_provider": model_data.get("top_provider", {}),
+                        },
+                    )
+                )
 
             self._models_cache = models
             return models

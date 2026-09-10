@@ -38,6 +38,7 @@ class AnthropicProvider(ModelProviderBase):
         if self._client is None:
             try:
                 from anthropic import AsyncAnthropic
+
                 self._client = AsyncAnthropic(
                     api_key=self.api_key,
                     base_url=self.base_url,
@@ -65,10 +66,12 @@ class AnthropicProvider(ModelProviderBase):
             if msg.role == "system":
                 system_prompt = msg.content
             else:
-                anthropic_messages.append({
-                    "role": msg.role,
-                    "content": msg.content,
-                })
+                anthropic_messages.append(
+                    {
+                        "role": msg.role,
+                        "content": msg.content,
+                    }
+                )
 
         kwargs = {
             "model": model,
@@ -94,11 +97,13 @@ class AnthropicProvider(ModelProviderBase):
             elif block.type == "tool_use":
                 if tool_calls is None:
                     tool_calls = []
-                tool_calls.append({
-                    "id": block.id,
-                    "name": block.name,
-                    "arguments": block.input,
-                })
+                tool_calls.append(
+                    {
+                        "id": block.id,
+                        "name": block.name,
+                        "arguments": block.input,
+                    }
+                )
 
         return ChatResponse(
             content=content,

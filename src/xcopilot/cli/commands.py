@@ -20,7 +20,9 @@ def model():
 
 
 @model.command("list")
-@click.option("--provider", help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter)")
+@click.option(
+    "--provider", help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter)"
+)
 @click.pass_context
 def model_list(ctx, provider):
     """List available models from all providers."""
@@ -67,7 +69,9 @@ def model_list(ctx, provider):
             caps = ", ".join([c.value for c in m.capabilities])
             pricing = ""
             if m.pricing:
-                pricing = f"in: ${m.pricing.get('input', 0):.2f}, out: ${m.pricing.get('output', 0):.2f}"
+                pricing = (
+                    f"in: ${m.pricing.get('input', 0):.2f}, out: ${m.pricing.get('output', 0):.2f}"
+                )
             table.add_row(
                 m.provider.value,
                 m.id,
@@ -241,7 +245,9 @@ def model_test(ctx, model, provider):
             with console.status(f"[bold green]Testing {test_model}..."):
                 response = await registry.chat_with_fallback(messages, test_model)
             console.print(f"[green]✓[/green] Response: {response.content}")
-            console.print(f"[dim]Model: {response.model}, Provider: {response.provider.value}[/dim]")
+            console.print(
+                f"[dim]Model: {response.model}, Provider: {response.provider.value}[/dim]"
+            )
             if response.usage:
                 console.print(f"[dim]Usage: {response.usage}[/dim]")
         except (httpx.HTTPError, ValueError, RuntimeError) as e:
@@ -375,7 +381,11 @@ def mcp_tools(ctx, server_name):
 
             for tool in tools:
                 params = tool.get("inputSchema", {})
-                param_str = json.dumps(params)[:80] + "..." if len(json.dumps(params)) > 80 else json.dumps(params)
+                param_str = (
+                    json.dumps(params)[:80] + "..."
+                    if len(json.dumps(params)) > 80
+                    else json.dumps(params)
+                )
                 table.add_row(tool["name"], tool.get("description", ""), param_str)
 
             console.print(table)
@@ -394,7 +404,9 @@ def skill():
 
 @skill.command("search")
 @click.argument("query")
-@click.option("--source", help="Source marketplace (github, anthropic, scientific, diagram, langchain)")
+@click.option(
+    "--source", help="Source marketplace (github, anthropic, scientific, diagram, langchain)"
+)
 @click.pass_context
 def skill_search(ctx, query, source):
     """Search skills across all marketplaces."""
@@ -416,7 +428,7 @@ def skill_search(ctx, query, source):
         for skill in results:
             triggers = ", ".join(skill.triggers[:3])
             if len(skill.triggers) > 3:
-                triggers += f" +{len(skill.triggers)-3} more"
+                triggers += f" +{len(skill.triggers) - 3} more"
             table.add_row(skill.name, skill.source, skill.description[:80], triggers)
 
         console.print(table)
@@ -874,7 +886,9 @@ def init():
 
 @init.command("project")
 @click.option("--name", prompt=True, help="Project name")
-@click.option("--template", type=click.Choice(["default", "web", "api", "cli", "agent"]), default="default")
+@click.option(
+    "--template", type=click.Choice(["default", "web", "api", "cli", "agent"]), default="default"
+)
 @click.pass_context
 def init_project(ctx, name, template):
     """Initialize a new X-Copilot project."""
@@ -943,7 +957,7 @@ def init_config(ctx, global_flag):
         config_path = project_root / ".xcopilot" / "config.json"
 
     if config_path.exists() and not click.confirm(f"Config exists at {config_path}. Overwrite?"):
-            return
+        return
 
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -979,7 +993,10 @@ def doctor(ctx):
 
     # Check Python version
     import sys
-    console.print(f"Python: {sys.version.split()[0]} {'✓' if sys.version_info >= (3, 11) else '✗ (need 3.11+)'}")
+
+    console.print(
+        f"Python: {sys.version.split()[0]} {'✓' if sys.version_info >= (3, 11) else '✗ (need 3.11+)'}"
+    )
 
     # Check config
     config_path = Path.cwd() / ".xcopilot" / "config.json"
@@ -1011,6 +1028,7 @@ def doctor(ctx):
 
     # Check memory
     from xcopilot.memory import MemoryEngine
+
     memory = MemoryEngine(project_root=str(Path.cwd()))
     console.print("\n[bold]Memory:[/bold]")
     console.print(f"  Session: {len(memory.session._data)} items")

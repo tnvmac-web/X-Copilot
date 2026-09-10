@@ -24,7 +24,11 @@ class LMStudioProvider(ModelProviderBase):
 
     def __init__(self, config: dict):
         super().__init__(config)
-        self.base_url = config.get("base_url") or os.environ.get("LMSTUDIO_BASE_URL") or "http://localhost:1234/v1"
+        self.base_url = (
+            config.get("base_url")
+            or os.environ.get("LMSTUDIO_BASE_URL")
+            or "http://localhost:1234/v1"
+        )
         self.api_key = config.get("api_key") or "lm-studio"  # LM Studio accepts any key
         self._client = None
         self._models_cache: list[ModelInfo] = []
@@ -111,6 +115,7 @@ class LMStudioProvider(ModelProviderBase):
                         break
                     if data_str:
                         import json
+
                         data = json.loads(data_str)
                         if data["choices"]:
                             delta = data["choices"][0].get("delta", {})
@@ -129,10 +134,13 @@ class LMStudioProvider(ModelProviderBase):
     ) -> EmbeddingResponse:
         """Generate embeddings via LM Studio API."""
         client = self._get_client()
-        response = await client.post("/embeddings", json={
-            "model": model,
-            "input": texts,
-        })
+        response = await client.post(
+            "/embeddings",
+            json={
+                "model": model,
+                "input": texts,
+            },
+        )
         response.raise_for_status()
         data = response.json()
 
@@ -162,16 +170,18 @@ class LMStudioProvider(ModelProviderBase):
                 if "vision" in model_id.lower() or "llava" in model_id.lower():
                     capabilities.append(ModelCapability.VISION)
 
-                models.append(ModelInfo(
-                    id=model_id,
-                    name=model_id,
-                    provider=ModelProvider.LMSTUDIO,
-                    capabilities=capabilities,
-                    context_window=model_data.get("context_length", 4096),
-                    metadata={
-                        "owned_by": model_data.get("owned_by", "lm-studio"),
-                    },
-                ))
+                models.append(
+                    ModelInfo(
+                        id=model_id,
+                        name=model_id,
+                        provider=ModelProvider.LMSTUDIO,
+                        capabilities=capabilities,
+                        context_window=model_data.get("context_length", 4096),
+                        metadata={
+                            "owned_by": model_data.get("owned_by", "lm-studio"),
+                        },
+                    )
+                )
 
             self._models_cache = models
             return models

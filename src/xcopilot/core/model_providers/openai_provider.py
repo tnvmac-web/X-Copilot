@@ -39,6 +39,7 @@ class OpenAIProvider(ModelProviderBase):
         if self._client is None:
             try:
                 from openai import AsyncOpenAI
+
                 self._client = AsyncOpenAI(
                     api_key=self.api_key,
                     base_url=self.base_url,
@@ -97,7 +98,9 @@ class OpenAIProvider(ModelProviderBase):
                 "prompt_tokens": response.usage.prompt_tokens,
                 "completion_tokens": response.usage.completion_tokens,
                 "total_tokens": response.usage.total_tokens,
-            } if response.usage else {},
+            }
+            if response.usage
+            else {},
             finish_reason=choice.finish_reason,
             tool_calls=choice.message.tool_calls,
             raw_response=response.model_dump(),
@@ -139,7 +142,9 @@ class OpenAIProvider(ModelProviderBase):
             usage={
                 "prompt_tokens": response.usage.prompt_tokens,
                 "total_tokens": response.usage.total_tokens,
-            } if response.usage else {},
+            }
+            if response.usage
+            else {},
         )
 
     async def list_models(self) -> list[ModelInfo]:
