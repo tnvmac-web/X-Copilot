@@ -1,0 +1,37 @@
+{
+  "preferred_tools": [],
+  "code_style": {
+    "indent": 4,
+    "type_hints": true
+  },
+  "conventions": {
+    "money_as_cents": true
+  },
+  "anti_patterns": [],
+  "models": {
+    "default": "ollama",
+    "fallback_chain": [
+      "ollama",
+      "lmstudio",
+      "openrouter"
+    ],
+    "openai": {
+      "api_key": "${OPENAI_API_KEY}"
+    },
+    "anthropic": {
+      "api_key": "${ANTHROPIC_API_KEY}"
+    },
+    "ollama": {
+      "base_url": "http://localhost:11434"
+    },
+    "lmstudio": {
+      "base_url": "http://localhost:1234/v1"
+    },
+    "openrouter": {
+      "api_key": "${OPENROUTER_API_KEY}"
+    }
+  },
+  "mcp": {
+    "servers": {}
+  }
+}
