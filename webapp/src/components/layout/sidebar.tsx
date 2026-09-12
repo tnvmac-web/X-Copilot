@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Brain, X, Plus, MessageSquare, Database, Server, Settings, ChevronRight } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -53,19 +52,8 @@ export function Sidebar({
   showNewChat,
   setShowNewChat,
 }: SidebarProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(isOpen);
-
   return (
     <>
-      <button
-        onClick={() => setSidebarOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card border border-border rounded-lg shadow-lg"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      </button>
-
       <div
         className={cn(
           "fixed lg:static inset-y-0 left-0 z-40 flex flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out",
