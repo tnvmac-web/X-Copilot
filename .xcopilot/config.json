@@ -9,7 +9,7 @@
   },
   "anti_patterns": [],
   "models": {
-    "default": "ollama",
+    "default": "anthropic",
     "fallback_chain": [
       "ollama",
       "lmstudio",
@@ -29,7 +29,11 @@
     },
     "openrouter": {
       "api_key": "${OPENROUTER_API_KEY}"
-    }
+    },
+    "nvidia": {
+          "api_key": "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",
+          "base_url": "https://integrate.api.nvidia.com/v1"
+        }
   },
   "mcp": {
     "servers": {}

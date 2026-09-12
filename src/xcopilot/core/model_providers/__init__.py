@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from xcopilot.core.model_providers.anthropic_provider import register_anthropic
 from xcopilot.core.model_providers.lmstudio_provider import register_lmstudio
+from xcopilot.core.model_providers.nvidia_provider import register_nvidia
 from xcopilot.core.model_providers.ollama_provider import register_ollama
 from xcopilot.core.model_providers.openai_provider import register_openai
 from xcopilot.core.model_providers.openrouter_provider import register_openrouter
@@ -11,6 +12,7 @@ from xcopilot.core.model_providers.openrouter_provider import register_openroute
 __all__ = [
     "register_anthropic",
     "register_lmstudio",
+    "register_nvidia",
     "register_ollama",
     "register_openai",
     "register_openrouter",
@@ -32,6 +34,8 @@ def register_all_providers(config: dict | None = None) -> None:
         register_lmstudio(config["lmstudio"])
     if config.get("openrouter"):
         register_openrouter(config["openrouter"])
+    if config.get("nvidia"):
+        register_nvidia(config["nvidia"])
 
     # Auto-register Ollama and LM Studio if running (no API key needed)
     # This allows local models to work out of the box
