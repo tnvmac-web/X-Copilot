@@ -26,12 +26,14 @@ fn main() {
         )
         .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
-            // Show window on startup
-            let window = app.get_webview_window("main").unwrap();
-            window.show().unwrap();
+            if let Some(window) = app.get_webview_window("main") {
+                window.show()?;
+            }
 
-            app.global_shortcut().register("Ctrl+Shift+X")?;
-            
+            if let Err(error) = app.global_shortcut().register("Ctrl+Shift+X") {
+                eprintln!("Unable to register Ctrl+Shift+X: {error}");
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
