@@ -23,6 +23,7 @@ class ModelProvider(Enum):
     GEMINI = "gemini"
     DEEPSEEK = "deepseek"
     XAI = "xai"
+    NVIDIA = "nvidia"
     CUSTOM = "custom"
 
 
