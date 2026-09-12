@@ -94,7 +94,19 @@ export default function Home() {
       content: input.trim(),
       timestamp: new Date(),
     };
+    const chatId = currentChatId || crypto.randomUUID();
     const conversation = [...messages, userMessage];
+    if (!currentChatId) {
+      setCurrentChatId(chatId);
+      setChats((current) => [{
+        id: chatId,
+        title: userMessage.content.slice(0, 34),
+        messages: conversation,
+        model: selectedModel,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }, ...current]);
+    }
     setMessages(conversation);
     setInput("");
     setIsLoading(true);
@@ -110,20 +122,30 @@ export default function Home() {
       });
       if (!response.ok) throw new Error("The chat service is unavailable.");
       const data = await response.json();
-      setMessages((current) => [...current, {
+      const assistantMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
         content: data.content || "No response returned.",
         timestamp: new Date(),
         model: selectedModel,
-      }]);
+      };
+      const completedConversation = [...conversation, assistantMessage];
+      setMessages(completedConversation);
+      setChats((current) => current.map((chat) => chat.id === chatId
+        ? { ...chat, messages: completedConversation, updatedAt: new Date() }
+        : chat));
     } catch (error) {
-      setMessages((current) => [...current, {
+      const errorMessage: Message = {
         id: crypto.randomUUID(),
         role: "assistant",
         content: error instanceof Error ? error.message : "Something went wrong.",
         timestamp: new Date(),
-      }]);
+      };
+      const failedConversation = [...conversation, errorMessage];
+      setMessages(failedConversation);
+      setChats((current) => current.map((chat) => chat.id === chatId
+        ? { ...chat, messages: failedConversation, updatedAt: new Date() }
+        : chat));
     } finally {
       setIsLoading(false);
     }
@@ -155,6 +177,7 @@ export default function Home() {
           onModelChange={setSelectedModel}
           onNewChat={createNewChat}
           onSettings={() => setDetailsOpen((open) => !open)}
+          onMenu={() => setSidebarOpen(true)}
         />
 
         <div className="flex min-h-0 flex-1 flex-col">

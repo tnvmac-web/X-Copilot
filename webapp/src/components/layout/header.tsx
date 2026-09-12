@@ -1,6 +1,6 @@
 "use client";
 
-import { Brain, X, Plus, Settings, ChevronRight, ChevronLeft } from "lucide-react";
+import { Menu, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +9,7 @@ interface HeaderProps {
   onModelChange: (model: string) => void;
   onNewChat: () => void;
   onSettings: () => void;
+  onMenu?: () => void;
 }
 
 const MODELS = [
@@ -20,10 +21,13 @@ const MODELS = [
   { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo", provider: "OpenAI" },
 ];
 
-export function Header({ selectedModel, onModelChange, onNewChat, onSettings }: HeaderProps) {
+export function Header({ selectedModel, onModelChange, onNewChat, onSettings, onMenu }: HeaderProps) {
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
       <div className="flex items-center gap-4">
+        <button onClick={onMenu} className="rounded-lg p-2 transition-colors hover:bg-muted lg:hidden" title="Open navigation">
+          <Menu className="h-5 w-5" />
+        </button>
         <div className="relative">
           <select
             value={selectedModel}

@@ -453,7 +453,20 @@ export default function App() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const chatId = currentChatId || crypto.randomUUID();
+    const conversation = [...messages, userMessage];
+    if (!currentChatId) {
+      setCurrentChatId(chatId);
+      setChats((prev) => [{
+        id: chatId,
+        title: userMessage.content.slice(0, 34),
+        messages: conversation,
+        model: selectedModel,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }, ...prev]);
+    }
+    setMessages(conversation);
     setIsLoading(true);
     setInput('');
 
@@ -462,7 +475,7 @@ export default function App() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map((m) => ({ role: m.role, content: m.content })),
+          messages: conversation.map((m) => ({ role: m.role, content: m.content })),
           model: selectedModel,
         }),
       });
@@ -477,7 +490,11 @@ export default function App() {
         timestamp: new Date(),
         model: selectedModel,
       };
-      setMessages((prev) => [...prev, assistantMessage]);
+      const completedConversation = [...conversation, assistantMessage];
+      setMessages(completedConversation);
+      setChats((prev) => prev.map((chat) => chat.id === chatId
+        ? { ...chat, messages: completedConversation, updatedAt: new Date() }
+        : chat));
     } catch (error) {
       const errorMessage: Message = {
         id: crypto.randomUUID(),
@@ -485,7 +502,11 @@ export default function App() {
         content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, errorMessage]);
+      const failedConversation = [...conversation, errorMessage];
+      setMessages(failedConversation);
+      setChats((prev) => prev.map((chat) => chat.id === chatId
+        ? { ...chat, messages: failedConversation, updatedAt: new Date() }
+        : chat));
     } finally {
       setIsLoading(false);
     }
