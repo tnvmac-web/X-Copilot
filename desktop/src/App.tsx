@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Settings, Menu, X, Plus, MessageSquare, ChevronLeft, ChevronRight, Copy, Check, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Settings, Menu, X, Plus, MessageSquare, Copy, Check, Loader2 } from 'lucide-react';
 import { cn } from './lib/utils';
 
 interface Message {
@@ -39,44 +39,37 @@ const MODELS = [
 const SIDEBAR_WIDTH = 280;
 const CHAT_SIDEBAR_WIDTH = 320;
 
-function Button({ className, variant = 'default', size = 'default', asChild = false, children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const baseStyles = 'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
-  
-  const variants = {
-    default: 'bg-primary text-primary-foreground hover:bg-primary/90',
-    destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-    outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-    secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-    ghost: 'hover:bg-accent hover:text-accent-foreground',
-    link: 'text-primary underline-offset-4 hover:underline',
-  };
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: keyof typeof buttonVariants;
+  size?: keyof typeof buttonSizes;
+};
 
-  const sizes = {
-    default: 'h-10 px-4 py-2',
-    sm: 'h-9 rounded-md px-3',
-    lg: 'h-11 rounded-md px-8',
-    icon: 'h-10 w-10',
-  };
+const buttonVariants = {
+  default: 'bg-primary text-primary-foreground hover:bg-primary/90',
+  destructive: 'bg-destructive text-destructive-foreground hover:bg-destructive/90',
+  outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+  secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+  ghost: 'hover:bg-accent hover:text-accent-foreground',
+  link: 'text-primary underline-offset-4 hover:underline',
+};
+
+const buttonSizes = {
+  default: 'h-10 px-4 py-2',
+  sm: 'h-9 rounded-md px-3',
+  lg: 'h-11 rounded-md px-8',
+  icon: 'h-10 w-10',
+};
+
+function Button({ className, variant = 'default', size = 'default', children, ...props }: ButtonProps) {
+  const baseStyles = 'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50';
 
   return (
     <button
-      className={cn(baseStyles, variants[variant], sizes[size], className)}
+      className={cn(baseStyles, buttonVariants[variant], buttonSizes[size], className)}
       {...props}
     >
       {children}
     </button>
-  );
-}
-
-function Textarea({ className, ...props }: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return (
-    <textarea
-      className={cn(
-        'flex min-h-[80px] w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-        className
-      )}
-      {...props}
-    />
   );
 }
 
@@ -206,7 +199,6 @@ function Sidebar({
   onSelectChat, 
   onDeleteChat, 
   onNewChat, 
-  showNewChat, 
   setShowNewChat 
 }: { 
   isOpen: boolean;
@@ -219,7 +211,6 @@ function Sidebar({
   onSelectChat: (chat: Chat) => void;
   onDeleteChat: (chatId: string) => void;
   onNewChat: () => void;
-  showNewChat: boolean;
   setShowNewChat: (v: boolean) => void;
 }) {
   return (
@@ -345,7 +336,6 @@ function RightSidebar({
   onClose, 
   currentChatId, 
   chats, 
-  currentChatTitle, 
   selectedModel, 
   onModelChange, 
   messages 
@@ -354,7 +344,6 @@ function RightSidebar({
   onClose: () => void;
   currentChatId: string | null;
   chats: Chat[];
-  currentChatTitle: string;
   selectedModel: string;
   onModelChange: (model: string) => void;
   messages: Message[];
@@ -439,11 +428,10 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
-  const [showNewChat, setShowNewChat] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system');
+  const [, setShowNewChat] = useState(false);
+  const [, setShowSettings] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -467,7 +455,6 @@ export default function App() {
 
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
-    const userInput = input;
     setInput('');
 
     try {
@@ -537,9 +524,6 @@ export default function App() {
     navigator.clipboard.writeText(content);
   };
 
-  const currentChat = chats.find((c) => c.id === currentChatId);
-  const currentChatTitle = currentChat?.title || '';
-
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       <Sidebar
@@ -553,7 +537,6 @@ export default function App() {
         onSelectChat={loadChat}
         onDeleteChat={deleteChat}
         onNewChat={createNewChat}
-        showNewChat={showNewChat}
         setShowNewChat={setShowNewChat}
       />
 
@@ -629,7 +612,6 @@ export default function App() {
         onClose={() => setChatSidebarOpen(false)}
         currentChatId={currentChatId}
         chats={chats}
-        currentChatTitle={currentChatTitle}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         messages={messages}
