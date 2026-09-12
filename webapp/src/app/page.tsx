@@ -38,6 +38,7 @@ const MODELS = [
   { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI" },
   { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", provider: "Anthropic" },
 ];
+const CHAT_STORAGE_KEY = "xcopilot:web:chats";
 
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -50,7 +51,37 @@ export default function Home() {
   const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
   const [projects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
+  const [hasHydrated, setHasHydrated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const storedChats = window.localStorage.getItem(CHAT_STORAGE_KEY);
+    if (!storedChats) {
+      setHasHydrated(true);
+      return;
+    }
+    try {
+      const parsedChats = JSON.parse(storedChats) as Chat[];
+      setChats(parsedChats.map((chat) => ({
+        ...chat,
+        createdAt: new Date(chat.createdAt),
+        updatedAt: new Date(chat.updatedAt),
+        messages: chat.messages.map((message) => ({
+          ...message,
+          timestamp: new Date(message.timestamp),
+        })),
+      })));
+    } catch {
+      window.localStorage.removeItem(CHAT_STORAGE_KEY);
+    } finally {
+      setHasHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasHydrated) return;
+    window.localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(chats));
+  }, [chats, hasHydrated]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
