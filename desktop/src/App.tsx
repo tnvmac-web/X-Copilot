@@ -550,23 +550,26 @@ export default function App() {
 
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
           {messages.length === 0 && currentChatId === null && (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <svg className="w-16 h-16 text-primary/20 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.548a3.374 3.374 0 00-1.223-.946l-.548-.547z" />
-              </svg>
-              <h2 className="text-2xl font-bold mb-2">Welcome to X-Copilot</h2>
-              <p className="text-muted-foreground mb-8 max-w-md">
-                Your self-growing AI agent with multi-model support, MCP integration, and a unified skills marketplace.
+            <div className="flex h-full flex-col items-center justify-center text-center">
+              <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10 text-primary">
+                <Bot className="h-8 w-8" />
+              </div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-primary">X-Copilot</p>
+              <h2 className="text-3xl font-semibold tracking-tight">What are we building today?</h2>
+              <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">
+                Ask questions, shape ideas, or send a task to your multi-model workspace.
               </p>
-              <div className="flex gap-4 justify-center">
-                <Button onClick={createNewChat} className="px-6 py-3">
-                  <Plus className="w-4 h-4 mr-2" />
-                  New Chat
-                </Button>
-                <Button variant="outline" className="px-6 py-3">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Browse Chats
-                </Button>
+              <div className="mt-8 grid w-full max-w-xl grid-cols-3 gap-3 text-left">
+                {["Review a code change", "Plan a new feature", "Explain a concept"].map((prompt) => (
+                  <button
+                    key={prompt}
+                    onClick={() => { createNewChat(); setInput(prompt); }}
+                    className="rounded-xl border border-border bg-card p-4 text-sm transition-colors hover:border-primary/50 hover:bg-primary/5"
+                  >
+                    <MessageSquare className="mb-5 h-4 w-4 text-primary" />
+                    {prompt}
+                  </button>
+                ))}
               </div>
             </div>
           )}
