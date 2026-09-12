@@ -1,6 +1,6 @@
 {
   "name": "xcopilot",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Self-growing AI agent for Windows - Node CLI wrapper",
   "main": "cli/lib/main.js",
   "bin": { "xcopilot": "cli/bin/xcopilot.js" },

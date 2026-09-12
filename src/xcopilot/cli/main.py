@@ -18,6 +18,7 @@ from xcopilot.cli.commands import (
     mcp,
     memory,
     model,
+    run,
     skill,
     skills,
     update,
@@ -55,6 +56,7 @@ cli.add_command(mcp)
 cli.add_command(skill)
 cli.add_command(init)
 cli.add_command(doctor)
+cli.add_command(run)
 
 
 @cli.command()
@@ -156,6 +158,9 @@ def _print_help():
         ("skill search", "Search skills marketplace"),
         ("init project", "Initialize new project"),
         ("doctor", "Run diagnostics"),
+        ("run webapp", "Run WebApp (Next.js)"),
+        ("run desktop", "Run Desktop App (Tauri)"),
+        ("run all", "Run both WebApp and Desktop App"),
         ("exit/quit/q", "Exit the REPL"),
     ]
     for cmd, desc in commands:

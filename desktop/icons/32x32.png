@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<svg width="32" height="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="24" fill="#00D4AA"/>
+  <path d="M32 48h64M32 64h48M32 80h32" stroke="white" stroke-width="8" stroke-linecap="round"/>
+</svg>
+</body>
+</html>

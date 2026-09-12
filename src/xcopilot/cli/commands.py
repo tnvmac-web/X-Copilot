@@ -1040,6 +1040,132 @@ def doctor(ctx):
     console.print("\n[green]Diagnostics complete![/green]")
 
 
+@click.group()
+def run():
+    """Run X-Copilot applications."""
+
+
+@run.command("webapp")
+@click.option("--port", "-p", default=3000, help="Port to run on")
+@click.option("--host", "-h", default="localhost", help="Host to bind to")
+@click.pass_context
+def run_webapp(ctx, port, host):
+    """Run the WebApp (Next.js)."""
+    import os
+    import subprocess
+    
+    webapp_dir = Path.cwd() / "webapp"
+    if not webapp_dir.exists():
+        console.print("[red]WebApp directory not found. Make sure you're in the X-Copilot project root.[/red]")
+        return
+    
+    console.print(f"[green]Starting WebApp on http://{host}:{port}[/green]")
+    
+    env = os.environ.copy()
+    env["PORT"] = str(port)
+    env["HOSTNAME"] = host
+    
+    try:
+        subprocess.run(
+            ["npm", "run", "dev"],
+            cwd=webapp_dir,
+            env=env,
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]Failed to start WebApp: {e}[/red]")
+    except FileNotFoundError:
+        console.print("[red]npm not found. Please install Node.js first.[/red]")
+
+
+@run.command("desktop")
+@click.pass_context
+def run_desktop(ctx):
+    """Run the Desktop App (Tauri)."""
+    import os
+    import subprocess
+    
+    desktop_dir = Path.cwd() / "desktop"
+    if not desktop_dir.exists():
+        console.print("[red]Desktop directory not found. Make sure you're in the X-Copilot project root.[/red]")
+        return
+    
+    console.print("[green]Starting Desktop App (Tauri dev mode)...[/green]")
+    
+    try:
+        subprocess.run(
+            ["npm", "run", "tauri", "dev"],
+            cwd=desktop_dir,
+            env=os.environ.copy(),
+            check=True
+        )
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]Failed to start Desktop App: {e}[/red]")
+    except FileNotFoundError:
+        console.print("[red]npm or cargo not found. Please install Node.js and Rust first.[/red]")
+
+
+@run.command("all")
+@click.option("--webapp-port", default=3000, help="WebApp port")
+@click.option("--webapp-host", default="localhost", help="WebApp host")
+@click.pass_context
+def run_all(ctx, webapp_port, webapp_host):
+    """Run both WebApp and Desktop App concurrently."""
+    import os
+    import signal
+    import subprocess
+    import sys
+    
+    webapp_dir = Path.cwd() / "webapp"
+    desktop_dir = Path.cwd() / "desktop"
+    
+    if not webapp_dir.exists() or not desktop_dir.exists():
+        console.print("[red]WebApp or Desktop directory not found.[/red]")
+        return
+    
+    console.print("[green]Starting WebApp and Desktop App...[/green]")
+    
+    env = os.environ.copy()
+    env["PORT"] = str(webapp_port)
+    env["HOSTNAME"] = webapp_host
+    
+    processes = []
+    
+    def cleanup(signum=None, frame=None):
+        console.print("\n[yellow]Shutting down...[/yellow]")
+        for p in processes:
+            if p.poll() is None:
+                p.terminate()
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, cleanup)
+    signal.signal(signal.SIGTERM, cleanup)
+    
+    try:
+        webapp_proc = subprocess.Popen(
+            ["npm", "run", "dev"],
+            cwd=webapp_dir,
+            env=env
+        )
+        processes.append(webapp_proc)
+        
+        desktop_proc = subprocess.Popen(
+            ["npm", "run", "tauri", "dev"],
+            cwd=desktop_dir,
+            env=os.environ.copy()
+        )
+        processes.append(desktop_proc)
+        
+        # Wait for both processes
+        for p in processes:
+            p.wait()
+            
+    except FileNotFoundError:
+        console.print("[red]npm or cargo not found. Please install Node.js and Rust first.[/red]")
+    except KeyboardInterrupt:
+        cleanup()
+
+
 # Export all command groups
 __all__ = [
     "checkpoints",
@@ -1050,6 +1176,7 @@ __all__ = [
     "mcp",
     "memory",
     "model",
+    "run",
     "skill",
     "skills",
     "update",
