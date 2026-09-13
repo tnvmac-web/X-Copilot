@@ -23,6 +23,7 @@ from xcopilot.cli.commands import (
     skills,
     update,
 )
+from xcopilot.cli.serve import serve
 
 console = Console()
 
@@ -57,6 +58,7 @@ cli.add_command(skill)
 cli.add_command(init)
 cli.add_command(doctor)
 cli.add_command(run)
+cli.add_command(serve)
 
 
 @cli.command()

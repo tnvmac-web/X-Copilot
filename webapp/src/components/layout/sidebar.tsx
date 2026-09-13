@@ -223,8 +223,8 @@ export function Sidebar({
               "flex-1 overflow-y-auto space-y-1 px-1",
               collapsed && "items-center px-0"
             )}>
-              {chats.map((chat) => (
-                <div key={chat.id} className="relative group">
+              {chats.map((chat, index) => (
+                <div key={`${chat.id}-${index}`} className="relative group">
                   <button
                     onClick={() => onSelectChat(chat)}
                     onMouseEnter={() => setHoveredChatId(chat.id)}

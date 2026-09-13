@@ -10,18 +10,10 @@ interface HeaderProps {
   onNewChat: () => void;
   onSettings: () => void;
   onMenu?: () => void;
+  models: { id: string; name: string; provider: string }[];
 }
 
-const MODELS = [
-  { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI" },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI" },
-  { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", provider: "Anthropic" },
-  { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku", provider: "Anthropic" },
-  { id: "gpt-4-turbo", name: "GPT-4 Turbo", provider: "OpenAI" },
-  { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo", provider: "OpenAI" },
-];
-
-export function Header({ selectedModel, onModelChange, onNewChat, onSettings, onMenu }: HeaderProps) {
+export function Header({ selectedModel, onModelChange, onNewChat, onSettings, onMenu, models }: HeaderProps) {
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
       <div className="flex items-center gap-4">
@@ -34,7 +26,7 @@ export function Header({ selectedModel, onModelChange, onNewChat, onSettings, on
             onChange={(e) => onModelChange(e.target.value)}
             className="px-3 py-1.5 text-sm border border-border rounded-lg bg-background cursor-pointer"
           >
-            {MODELS.map((model) => (
+            {models.map((model) => (
               <option key={model.id} value={model.id}>
                 {model.name} ({model.provider})
               </option>
@@ -57,11 +49,4 @@ export function Header({ selectedModel, onModelChange, onNewChat, onSettings, on
       </div>
     </header>
   );
-}
-
-interface HeaderProps {
-  selectedModel: string;
-  onModelChange: (model: string) => void;
-  onNewChat: () => void;
-  onSettings: () => void;
 }

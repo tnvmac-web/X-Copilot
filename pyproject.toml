@@ -39,6 +39,8 @@ dependencies = [
     "watchdog>=3.0",
     "networkx>=3.2",
     "httpx>=0.27",
+    "fastapi>=0.110",
+    "uvicorn>=0.30",
 ]
 
 [project.optional-dependencies]
@@ -49,8 +51,8 @@ cli = ["nodeenv>=1.9"]
 console_scripts = { "xcopilot" = "xcopilot.cli.main:cli" }
 
 [tool.setuptools.packages.find]
-where = ["src"]
-include = ["xcopilot*"]
+where = ["src", "."]
+include = ["xcopilot*", "server*"]
 
 [tool.ruff]
 line-length = 100
@@ -71,3 +73,6 @@ addopts = "-v --tb=short"
 omit = [
     "src/xcopilot/cli/*",
 ]
+
+[tool.coverage.report]
+fail_under = 60

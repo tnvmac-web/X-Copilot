@@ -151,6 +151,25 @@ class NVIDIAProvider(ModelProviderBase):
         if self._models_cache:
             return self._models_cache
 
+        try:
+            response = await self._get_client().models.list()
+            live_models = [
+                ModelInfo(
+                    id=item.id,
+                    name=item.id,
+                    provider=ModelProvider.NVIDIA,
+                    capabilities=[ModelCapability.CHAT, ModelCapability.STREAMING],
+                    context_window=128000,
+                    max_output_tokens=8192,
+                )
+                for item in response.data
+            ]
+            if live_models:
+                self._models_cache = live_models
+                return live_models
+        except (openai.APIError, openai.APIConnectionError, ValueError):
+            pass
+
         # Known NVIDIA models (NVIDIA provides various models via their API)
         known_models = [
             ModelInfo(

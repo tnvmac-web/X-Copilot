@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 222 22% 14%;
+    --background: 180 22% 96%;
+    --foreground: 191 35% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 222 22% 14%;
+    --card-foreground: 191 35% 13%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 168 76% 35%;
+    --primary: 174 73% 31%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 18% 94%;
-    --secondary-foreground: 222 22% 14%;
-    --muted: 210 18% 94%;
-    --muted-foreground: 215 12% 44%;
-    --accent: 168 35% 92%;
-    --accent-foreground: 168 76% 25%;
+    --secondary: 174 20% 91%;
+    --secondary-foreground: 191 35% 13%;
+    --muted: 174 18% 93%;
+    --muted-foreground: 191 12% 43%;
+    --accent: 38 86% 91%;
+    --accent-foreground: 28 63% 27%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214 16% 87%;
-    --input: 214 16% 87%;
-    --ring: 168 76% 35%;
-    --radius: 0.5rem;
+    --border: 174 16% 84%;
+    --input: 174 16% 84%;
+    --ring: 174 73% 31%;
+    --radius: 0.65rem;
   }
 
   .dark {
@@ -55,7 +55,26 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    background-image: radial-gradient(circle at 15% 0%, hsl(174 55% 90% / 0.85), transparent 32rem), linear-gradient(135deg, hsl(180 22% 96%), hsl(38 50% 97%));
     font-family: "Avenir Next", "Segoe UI", sans-serif;
+    min-width: 320px;
+    min-height: 100vh;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--foreground) / 0.16);
+    border: 3px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
   }
 }
 

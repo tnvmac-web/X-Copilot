@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 import httpx
+import openai
 
 
 class ModelProvider(Enum):
@@ -196,7 +197,7 @@ class ProviderRegistry:
                 models = await provider.list_models()
                 if any(m.id == model for m in models):
                     return await provider.chat(messages, model, **kwargs)
-            except (httpx.HTTPError, ValueError, RuntimeError) as e:
+            except (httpx.HTTPError, openai.APIError, openai.APIConnectionError, ValueError, RuntimeError) as e:
                 last_error = e
                 continue
 
@@ -208,7 +209,7 @@ class ProviderRegistry:
         for provider_type, provider in self._providers.items():
             try:
                 result[provider_type] = await provider.list_models()
-            except (httpx.HTTPError, ValueError):
+            except (httpx.HTTPError, ValueError, RuntimeError):
                 result[provider_type] = []
         return result
 
