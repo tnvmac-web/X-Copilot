@@ -22,12 +22,12 @@ export async function GET(request: NextRequest) {
     );
 
     if (!response.ok) {
-      throw new Error(`Memory API error: ${response.status}`);
+      return NextResponse.json(await response.json(), { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch memories" },
       { status: 500 }
@@ -45,11 +45,11 @@ export async function DELETE(request: NextRequest) {
     });
 
     if (!response.ok) {
-      throw new Error(`Memory API error: ${response.status}`);
+      return NextResponse.json(await response.json(), { status: response.status });
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to clear memories" },
       { status: 500 }

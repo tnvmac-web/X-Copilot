@@ -43,6 +43,7 @@ dependencies = [
     "uvicorn>=0.30",
     "prompt_toolkit>=3.0",
     "Pygments>=2.16",
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]

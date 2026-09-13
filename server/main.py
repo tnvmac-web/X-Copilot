@@ -12,6 +12,7 @@ from pathlib import Path
 from re import fullmatch
 from typing import Any
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi import status as http_status
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +23,9 @@ from xcopilot.core.model_providers import register_all_providers
 from xcopilot.core.models import ChatMessage, ModelCapability, ModelProvider, registry
 from xcopilot.memory import MemoryEngine
 from xcopilot.skills.marketplace import SkillsMarketplace
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env", override=False)
 
 AUTH_SECRET = os.environ.get("XCOPILOT_AUTH_SECRET", "xcopilot-local-dev-secret")
 DEFAULT_USERNAME = os.environ.get("XCOPILOT_ADMIN_USERNAME", "admin")
@@ -109,6 +113,8 @@ if registry.get(ModelProvider.OPENAI):
     registry.set_default(ModelProvider.OPENAI)
 elif registry.get(ModelProvider.ANTHROPIC):
     registry.set_default(ModelProvider.ANTHROPIC)
+elif registry.get(ModelProvider.NVIDIA):
+    registry.set_default(ModelProvider.NVIDIA)
 
 
 @asynccontextmanager

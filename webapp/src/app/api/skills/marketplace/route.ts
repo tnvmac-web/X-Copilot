@@ -15,12 +15,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
-      throw new Error(`Skills API error: ${response.status}`);
+      return NextResponse.json(await response.json(), { status: response.status });
     }
 
     const data = await response.json();
     return NextResponse.json(data);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch marketplace" },
       { status: 500 }
@@ -45,11 +45,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response.ok) {
-      throw new Error(`Install API error: ${response.status}`);
+      return NextResponse.json(await response.json(), { status: response.status });
     }
 
     return NextResponse.json(await response.json());
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Failed to install skill" },
       { status: 500 }
