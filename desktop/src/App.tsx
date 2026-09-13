@@ -27,17 +27,11 @@ interface Project {
   isActive: boolean;
 }
 
-const MODELS = [
-  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI' },
-  { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'OpenAI' },
-  { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'Anthropic' },
-  { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', provider: 'Anthropic' },
-  { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', provider: 'OpenAI' },
-  { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', provider: 'OpenAI' },
-];
+type ModelOption = { id: string; name: string; provider: string };
 
 const SIDEBAR_WIDTH = 280;
 const CHAT_SIDEBAR_WIDTH = 320;
+const API_BASE_URL = import.meta.env.VITE_XCOPILOT_API_URL || 'http://127.0.0.1:8000';
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: keyof typeof buttonVariants;
@@ -292,11 +286,12 @@ function Sidebar({
   );
 }
 
-function Header({ selectedModel, onModelChange, onNewChat, onSettings }: {
+function Header({ selectedModel, onModelChange, onNewChat, onSettings, models }: {
   selectedModel: string;
   onModelChange: (model: string) => void;
   onNewChat: () => void;
   onSettings: () => void;
+  models: ModelOption[];
 }) {
   return (
     <header className="flex items-center justify-between h-16 px-4 border-b border-border bg-card">
@@ -313,7 +308,7 @@ function Header({ selectedModel, onModelChange, onNewChat, onSettings }: {
           onChange={(e) => onModelChange(e.target.value)}
           className="px-3 py-1.5 border border-border rounded-lg bg-background text-sm"
         >
-          {MODELS.map((model) => (
+          {models.map((model) => (
             <option key={model.id} value={model.id}>
               {model.name} ({model.provider})
             </option>
@@ -338,7 +333,8 @@ function RightSidebar({
   chats, 
   selectedModel, 
   onModelChange, 
-  messages 
+  messages,
+  models,
 }: { 
   isOpen: boolean;
   onClose: () => void;
@@ -347,6 +343,7 @@ function RightSidebar({
   selectedModel: string;
   onModelChange: (model: string) => void;
   messages: Message[];
+  models: ModelOption[];
 }) {
   return (
     <div
@@ -383,7 +380,7 @@ function RightSidebar({
               onChange={(e) => onModelChange(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg bg-background"
             >
-              {MODELS.map((model) => (
+              {models.map((model) => (
                 <option key={model.id} value={model.id}>
                   {model.name} ({model.provider})
                 </option>
@@ -393,8 +390,8 @@ function RightSidebar({
           <div>
             <label className="block text-sm font-medium mb-1">Messages</label>
             <div className="max-h-64 overflow-y-auto space-y-2">
-              {messages.map((msg) => (
-                <div key={msg.id} className="p-2 bg-muted rounded-lg text-sm">
+              {messages.map((msg, index) => (
+                <div key={`${msg.id}-${index}`} className="p-2 bg-muted rounded-lg text-sm">
                   <div className="flex items-center gap-1 mb-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {msg.role === 'user' ? (
@@ -420,19 +417,79 @@ function RightSidebar({
 }
 
 export default function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [chatSidebarOpen, setChatSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [chatSidebarOpen, setChatSidebarOpen] = useState(false);
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(MODELS[0].id);
+  const [selectedModel, setSelectedModel] = useState('');
+  const [models, setModels] = useState<ModelOption[]>([]);
   const [projects] = useState<Project[]>([]);
   const [activeProject, setActiveProject] = useState<Project | null>(null);
   const [, setShowNewChat] = useState(false);
-  const [, setShowSettings] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [serverUrl, setServerUrl] = useState(API_BASE_URL);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [providerStatus, setProviderStatus] = useState<Record<string, string>>({});
+  const [providerApiKeys, setProviderApiKeys] = useState<Record<string, string>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const syncLayout = () => {
+      setSidebarOpen(window.innerWidth >= 1024);
+      setChatSidebarOpen(window.innerWidth >= 1280);
+    };
+
+    syncLayout();
+    window.addEventListener('resize', syncLayout);
+    return () => window.removeEventListener('resize', syncLayout);
+  }, []);
+
+  useEffect(() => {
+    const configuredUrl = window.localStorage.getItem('xcopilot_api_url') || API_BASE_URL;
+    setServerUrl(configuredUrl);
+    setUsername(window.localStorage.getItem('xcopilot_username') || '');
+    refreshModels(configuredUrl);
+    fetch(`${configuredUrl}/api/providers`).then((response) => response.ok ? response.json() : {}).then(setProviderStatus).catch(() => setProviderStatus({}));
+  }, []);
+
+  const refreshModels = async (url = serverUrl) => {
+    try {
+      const response = await fetch(`${url}/api/models`, { cache: 'no-store' });
+      if (!response.ok) throw new Error('Unable to load models');
+      const available = await response.json() as ModelOption[];
+      setModels(available);
+      setSelectedModel((current) => available.some((model) => model.id === current) ? current : available[0]?.id || '');
+    } catch {
+      setModels([]);
+      setSelectedModel('');
+    }
+  };
+
+  const authenticate = async (): Promise<string> => {
+    const storedToken = window.localStorage.getItem('xcopilot_token');
+    if (storedToken) {
+      setAuthToken(storedToken);
+      return storedToken;
+    }
+
+    if (!serverUrl || !username || !password) throw new Error('Open Settings and enter the X-Copilot server, username, and password.');
+    const response = await fetch(`${serverUrl}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    if (!response.ok) throw new Error('Unable to authenticate with X-Copilot');
+
+    const data = await response.json();
+    window.localStorage.setItem('xcopilot_token', data.token);
+    setAuthToken(data.token);
+    return data.token;
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -471,15 +528,26 @@ export default function App() {
     setInput('');
 
     try {
-      const response = await fetch('/api/chat', {
+      if (!selectedModel) throw new Error('No real model is configured. Add a provider in the backend first.');
+      const token = authToken || await authenticate();
+      const response = await fetch(`${serverUrl}/api/chat`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({
           messages: conversation.map((m) => ({ role: m.role, content: m.content })),
           model: selectedModel,
+          session_id: chatId,
         }),
       });
 
+      if (response.status === 401) {
+        window.localStorage.removeItem('xcopilot_token');
+        setAuthToken(null);
+        throw new Error('Your session expired. Please try again.');
+      }
       if (!response.ok) throw new Error('Failed to send message');
 
       const data = await response.json();
@@ -567,6 +635,7 @@ export default function App() {
           onModelChange={setSelectedModel}
           onNewChat={createNewChat}
           onSettings={() => setShowSettings(true)}
+          models={models}
         />
 
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -597,9 +666,9 @@ export default function App() {
           
           {messages.length > 0 && (
             <div className="max-w-3xl mx-auto w-full space-y-4">
-              {messages.map((message) => (
+              {messages.map((message, index) => (
                 <MessageBubble
-                  key={message.id}
+                  key={`${message.id}-${index}`}
                   message={message}
                   onCopy={copyMessage}
                 />
@@ -627,7 +696,7 @@ export default function App() {
           onChange={setInput}
           onSubmit={handleSend}
           isLoading={isLoading}
-          model={MODELS.find(m => m.id === selectedModel)?.name}
+          model={models.find((model) => model.id === selectedModel)?.name}
         />
       </div>
 
@@ -639,7 +708,27 @@ export default function App() {
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         messages={messages}
+        models={models}
       />
+
+      {showSettings && (
+        <div className="fixed inset-0 z-[60] flex items-start justify-center overflow-y-auto bg-foreground/30 p-2 backdrop-blur-sm sm:items-center sm:p-4">
+          <section className="my-0 flex max-h-[calc(100dvh-1rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl sm:my-4 sm:max-h-[calc(100dvh-2rem)]">
+            <div className="flex shrink-0 items-start justify-between gap-4 border-b border-border p-4 sm:p-6">
+              <div><p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Connection</p><h2 className="mt-1 text-xl font-semibold">X-Copilot settings</h2><p className="mt-1 text-sm text-muted-foreground">Configure the backend and real model credentials.</p></div>
+              <button className="rounded-lg p-2 hover:bg-muted" onClick={() => setShowSettings(false)} aria-label="Close settings"><X className="h-5 w-5" /></button>
+            </div>
+            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-4 sm:p-6">
+              <label className="block text-sm font-medium">Backend URL<input className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2" value={serverUrl} onChange={(event) => setServerUrl(event.target.value.replace(/\/$/, ''))} /></label>
+              <label className="block text-sm font-medium">Username<input className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2" value={username} onChange={(event) => setUsername(event.target.value)} /></label>
+              <label className="block text-sm font-medium">Password<input type="password" className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2" value={password} onChange={(event) => setPassword(event.target.value)} /></label>
+              <div className="rounded-xl border border-border bg-muted/30 p-4"><div className="mb-3 text-sm font-medium">Provider API keys</div><p className="mb-3 text-xs text-muted-foreground">Keys are sent to the backend for this runtime session and are not stored locally.</p>{['nvidia', 'openai', 'anthropic', 'openrouter'].map((provider) => <label className="mb-2 block text-sm font-medium capitalize" key={provider}>{provider}<input type="password" autoComplete="off" className="mt-1 w-full rounded-lg border border-input bg-background px-3 py-2" placeholder={`Enter ${provider} API key`} value={providerApiKeys[provider] || ''} onChange={(event) => setProviderApiKeys((current) => ({ ...current, [provider]: event.target.value }))} /></label>)}</div>
+              <div className="rounded-xl bg-muted/60 p-4 text-sm"><div className="mb-2 font-medium">Provider status</div>{Object.keys(providerStatus).length === 0 ? <p className="text-muted-foreground">No providers configured.</p> : Object.entries(providerStatus).map(([provider, state]) => <div className="flex justify-between py-1" key={provider}><span className="capitalize">{provider}</span><span className="text-muted-foreground">{state}</span></div>)}</div>
+            </div>
+            <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border bg-card p-4 sm:flex-row sm:justify-end sm:p-6"><Button variant="outline" className="w-full sm:w-auto" onClick={() => setShowSettings(false)}>Cancel</Button><Button className="w-full sm:w-auto" onClick={async () => { window.localStorage.setItem('xcopilot_api_url', serverUrl); window.localStorage.setItem('xcopilot_username', username); try { const token = authToken || await authenticate(); const response = await fetch(`${serverUrl}/api/settings`, { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ provider_api_keys: providerApiKeys }) }); if (!response.ok) throw new Error('Unable to save provider settings'); setProviderApiKeys({}); const saved = await response.json(); setProviderStatus(Object.fromEntries((saved.configured_providers || []).map((provider: string) => [provider, 'configured']))); await refreshModels(serverUrl); setShowSettings(false); } catch (error) { console.error(error); } }}>Save configuration</Button></div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

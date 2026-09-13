@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - XCOPILOT_AUTH_SECRET=${XCOPILOT_AUTH_SECRET:-xcopilot-production-secret}
+      - XCOPILOT_ADMIN_USERNAME=${XCOPILOT_ADMIN_USERNAME:-admin}
+      - XCOPILOT_ADMIN_PASSWORD=${XCOPILOT_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./src:/app/src
+      - ./server:/app/server
+    depends_on:
+      - webapp
+    restart: unless-stopped
+
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_TELEMETRY_DISABLED=1
+      - SERVER_URL=http://localhost:8000
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  desktop:
+    build:
+      context: ./desktop
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    volumes:
+      - ./desktop:/app
+    depends_on:
+      - server
+    restart: unless-stopped
+
+volumes:
+  server_data:
+  webapp_data:

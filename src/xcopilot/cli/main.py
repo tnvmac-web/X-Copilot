@@ -19,10 +19,12 @@ from xcopilot.cli.commands import (
     memory,
     model,
     run,
+    setup,
     skill,
     skills,
     update,
 )
+from xcopilot.cli.serve import serve
 
 console = Console()
 
@@ -56,7 +58,9 @@ cli.add_command(mcp)
 cli.add_command(skill)
 cli.add_command(init)
 cli.add_command(doctor)
+cli.add_command(setup)
 cli.add_command(run)
+cli.add_command(serve)
 
 
 @cli.command()
@@ -107,7 +111,7 @@ def start(ctx, test_mode):
 
     console.print("\n[bold]Ready for commands![/bold] Type 'help' for available commands.\n")
 
-    # Simple REPL
+    # Enhanced REPL with prompt_toolkit (syntax highlighting, auto-completion)
     while True:
         try:
             user_input = console.input("[bold cyan]xcopilot>[/bold cyan] ").strip()

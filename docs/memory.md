@@ -110,7 +110,7 @@ skill_path = mem.create_skill(
 name: code-review
 description: Review code for bugs, security, best practices
 triggers: [review, code-review, PR review]
-compatible_agents: [xcopilot, claude-code, codex, cursor]
+compatible_agents: [xcopilot, claude-code, codex, cursor, windsurf]
 ---
 # Instructions
 Step-by-step guidance here...

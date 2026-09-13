@@ -36,12 +36,18 @@ class MCPTool:
 class MCPGateway:
     """Gateway to connect to and manage MCP servers."""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         self.config = config
         self._servers: dict[str, MCPServerConfig] = {}
         self._processes: dict[str, subprocess.Popen] = {}
         self._clients: dict[str, httpx.AsyncClient] = {}
         self._tools_cache: dict[str, list[MCPTool]] = {}
+        self._request_id_counter = 0
+
+    def _next_request_id(self) -> int:
+        """Generate the next unique JSON-RPC request ID."""
+        self._request_id_counter += 1
+        return self._request_id_counter
 
     def add_server(self, server_config: MCPServerConfig) -> None:
         """Add an MCP server configuration."""
@@ -193,7 +199,7 @@ class MCPGateway:
             name,
             {
                 "jsonrpc": "2.0",
-                "id": 2,
+                "id": self._next_request_id(),
                 "method": "tools/list",
             },
         )
@@ -218,7 +224,7 @@ class MCPGateway:
             name,
             {
                 "jsonrpc": "2.0",
-                "id": 3,
+                "id": self._next_request_id(),
                 "method": "tools/call",
                 "params": {
                     "name": tool_name,
@@ -239,7 +245,7 @@ class MCPGateway:
             name,
             {
                 "jsonrpc": "2.0",
-                "id": 4,
+                "id": self._next_request_id(),
                 "method": "resources/list",
             },
         )
@@ -254,7 +260,7 @@ class MCPGateway:
             name,
             {
                 "jsonrpc": "2.0",
-                "id": 5,
+                "id": self._next_request_id(),
                 "method": "resources/read",
                 "params": {"uri": uri},
             },

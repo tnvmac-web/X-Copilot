@@ -2,7 +2,7 @@
 name: refactor
 description: Code cleanup and improvement
 triggers: [refactor, clean, improve, optimize, simplify]
-compatible_agents: [xcopilot, claude-code, codex, cursor]
+compatible_agents: [xcopilot, claude-code, codex, cursor, windsurf]
 version: 1.0.0
 ---
 # Refactor Skill

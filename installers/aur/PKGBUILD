@@ -1,0 +1,55 @@
+# Maintainer: tnvmac <tnvmac@web.com>
+pkgname=xcopilot
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Self-growing AI agent for Windows, Linux, and macOS"
+arch=('x86_64' 'aarch64')
+url="https://github.com/tnvmac-web/X-Copilot"
+license=('MIT')
+depends=('python' 'python-pip' 'nodejs' 'npm' 'rust')
+makedepends=('cargo')
+install=xcopilot.install
+source=("https://github.com/tnvmac-web/X-Copilot/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('PLACEHOLDER_SHA256')
+
+build() {
+  cd "X-Copilot-${pkgver}"
+
+  # Install Python package
+  pip install --user -e .
+
+  # Build WebApp
+  cd webapp
+  npm ci
+  npm run build
+
+  # Build Desktop App
+  cd ../desktop
+  npm ci
+  npm run tauri build || true
+}
+
+package() {
+  cd "X-Copilot-${pkgver}"
+
+  # Install Python package
+  pip install --prefix="${pkgdir}/usr" -e .
+
+  # Install WebApp
+  install -dm755 "${pkgdir}/usr/share/xcopilot/webapp"
+  cp -r webapp/dist "${pkgdir}/usr/share/xcopilot/webapp/"
+
+  # Install Desktop App
+  install -dm755 "${pkgdir}/usr/share/xcopilot/desktop"
+  cp -r desktop/dist "${pkgdir}/usr/share/xcopilot/desktop/" 2>/dev/null || true
+}
+
+post_install() {
+  echo "X-Copilot installed!"
+  echo "Run 'xcopilot start' to launch the CLI."
+  echo "Run 'xcopilot serve' to start the API server."
+}
+
+post_remove() {
+  echo "X-Copilot removed."
+}

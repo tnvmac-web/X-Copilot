@@ -2,7 +2,7 @@
 name: debug
 description: Debugging workflow for errors and issues
 triggers: [bug, error, fix, debug]
-compatible_agents: [xcopilot, claude-code, codex, cursor]
+compatible_agents: [xcopilot, claude-code, codex, cursor, windsurf]
 version: 1.0.0
 ---
 # Debug Skill

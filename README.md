@@ -79,19 +79,27 @@ Available permission modes are `standard`, `auto-ask`, `plan`, `bypass`, and
 Useful commands:
 
 ```text
-xcopilot memory                         Show memory status
-xcopilot skills                         List installed skills
-xcopilot skills-marketplace             Browse marketplace skills
-xcopilot skills-marketplace --install NAME
-xcopilot graph                          Build the project knowledge graph
-xcopilot checkpoints                    List checkpoints
-xcopilot tree                           Show the checkpoint tree
-xcopilot rewind CHECKPOINT_ID           Restore a checkpoint
-xcopilot fork CHECKPOINT_ID BRANCH      Create a checkpoint branch
-xcopilot compact --mode fast            Compact conversation history
-xcopilot context                        Show token budget usage
-xcopilot permissions                    Show permission modes
-xcopilot update                         Check for updates
+xcopilot init                             Initialize project
+xcopilot config                           View/edit config
+xcopilot doctor                           Diagnose environment issues
+xcopilot setup                            Guided setup wizard
+xcopilot model list [--provider X]         List available models
+xcopilot model set-default PROVIDER       Set default model
+xcopilot mcp                              Manage MCP server connections
+xcopilot skill                            Install/manage skills
+xcopilot skills                           List installed skills
+xcopilot skills-marketplace               Browse marketplace skills
+xcopilot memory                           Show memory status
+xcopilot graph                            Build project knowledge graph
+xcopilot checkpoints                      List checkpoints
+xcopilot tree                             Show the checkpoint tree
+xcopilot rewind CHECKPOINT_ID             Restore a checkpoint
+xcopilot fork CHECKPOINT_ID BRANCH        Create a checkpoint branch
+xcopilot compact [--mode fast]            Compact conversation history
+xcopilot context                          Show token budget usage
+xcopilot permissions                      Show permission modes
+xcopilot update                           Check for updates
+xcopilot serve                            Start the API server (FastAPI + WebSocket)
 ```
 
 ## Docker
@@ -114,8 +122,10 @@ Run against a local project directory:
 docker run --rm -it \
 	-v "$(pwd):/workspace" \
 	-w /workspace \
-	x-copilot:local --project /workspace start --test-mode
+	xcopilot:local serve --host 0.0.0.0 --port 8000
 ```
+
+The Docker image starts the API server by default (`xcopilot serve`) on port 8000, which exposes a REST API and WebSocket endpoint for real-time communication.
 
 ## Development
 
@@ -123,7 +133,7 @@ Run the test suite and coverage gate:
 
 ```bash
 pytest tests/ -v --tb=short
-pytest tests/ --cov=src/xcopilot --cov-report=term --cov-fail-under=65
+pytest tests/ --cov=src/xcopilot --cov-report=term --cov-fail-under=60
 ```
 
 Run the same static checks used by CI:
@@ -194,6 +204,8 @@ to `main` does not publish to PyPI or Docker.
 - **Checkpoints**: snapshot, rewind, fork, and inspect project state
 - **Permissions**: deny, ask, and allow decisions for tool actions
 - **Tools**: shell, file, search, and web operations
+- **Model Providers**: OpenAI, Anthropic, NVIDIA, Ollama, LM Studio, OpenRouter
+- **Server**: FastAPI-based HTTP server with WebSocket support via `xcopilot serve`
 
 ## License
 

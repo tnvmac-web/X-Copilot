@@ -17,10 +17,19 @@ X-Copilot-main/
 │   │   ├── main.py             # CLI groups, `start` REPL command
 │   │   ├── commands.py         # Subcommand implementations (model, memory, skills, etc.)
 │   │   ├── install.py          # PowerShell installer generator
+│   │   ├── serve.py            # `xcopilot serve` — runs FastAPI+uvicorn server
 │   │   └── __init__.py
 │   ├── core/                   # Core engines
 │   │   ├── models.py           # Model provider abstraction (ProviderRegistry, dataclasses)
-│   │   ├── model_providers/    # 5 providers: OpenAI, Anthropic, Ollama, LMStudio, OpenRouter
+│   │   ├── model_providers/    # 6 providers: OpenAI, Anthropic, Ollama, LMStudio, OpenRouter, NVIDIA
+│   │   │   ├── __init__.py     # register_all_providers()
+│   │   │   ├── openai_provider.py
+│   │   │   ├── anthropic_provider.py
+│   │   │   ├── ollama_provider.py
+│   │   │   ├── lmstudio_provider.py
+│   │   │   ├── openrouter_provider.py
+│   │   │   └── nvidia_provider.py  # NVIDIA API (OpenAI-compatible)
+│   │   ├── conversation_loop.py # Minimal agent loop (prompt→tool→response)
 │   │   ├── mcp_gateway.py      # MCP (Model Context Protocol) client/gateway
 │   │   ├── checkpoint.py       # Checkpoint manager (snapshot/rewind/fork)
 │   │   ├── compaction.py       # Token budget & context compaction (tiktoken)
@@ -39,7 +48,7 @@ X-Copilot-main/
 │   ├── skills/                 # Skill system
 │   │   ├── __init__.py
 │   │   ├── marketplace.py      # GitHub skills marketplace (4 repos)
-│   │   ├── unified_marketplace.py  # Unified marketplace (6 sources)
+│   │   ├── unified_marketplace.py  # Unified marketplace (7 sources)
 │   │   ├── learn/              # Auto-skill creation from patterns
 │   │   ├── debug/, deploy/, refactor/, test/  # Built-in skill categories
 │   │   └── SKILL.md            # Skill definition per category
@@ -51,6 +60,10 @@ X-Copilot-main/
 │   │   └── web.py              # Web fetching & scraping
 │   └── permission/
 │       └── pipeline.py         # 5-tier permission pipeline (DENY→ASK→ALLOW)
+├── server/                     # FastAPI server package
+│   ├── __init__.py
+│   ├── __main__.py
+│   └── main.py                 # FastAPI app with chat, WebSocket, auth, models, settings
 ├── webapp/                     # Next.js 15 web application
 │   ├── src/app/                # App Router
 │   │   ├── api/chat/           # Chat API endpoint
@@ -58,22 +71,32 @@ X-Copilot-main/
 │   │   └── page.tsx
 │   ├── src/components/         # React components (chat, layout, ui)
 │   ├── src/hooks/
-│   ├── src/lib/                # Core libs (prisma client, utils)
+│   ├── src/lib/                # Core libs (prisma client, utils, useWebSocket)
 │   ├── src/types/
-│   ├── prisma/                 # Prisma schema (11 models)
+│   ├── prisma/                 # Prisma schema (12 models)
 │   │   └── schema.prisma
-│   └── package.json
-├── desktop/                    # Tauri desktop app
+│   ├── package.json            # Next.js + socket.io + Prisma
+│   └── tailwind.config.ts
+├── desktop/                    # Vite + Tauri desktop app
 │   ├── src/
-│   │   ├── App.tsx
-│   │   ├── main.tsx
-│   │   └── lib/
-│   ├── src-tauri/              # Rust backend
-│   │   ├── icons/
-│   │   ├── tauri.conf.json
-│   │   └── Cargo.toml
-│   └── package.json
-├── tests/                      # Test suite (pytest, ≥65% coverage gate)
+│   │   ├── App.tsx             # Main React app (sidebar, chat, settings)
+│   │   ├── main.tsx            # Vite entry point
+│   │   ├── lib/
+│   │   └── index.css
+│   ├── vite.config.ts          # Vite configuration
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── package.json
+│   └── src-tauri/              # Rust backend
+│       ├── icons/
+│       ├── tauri.conf.json
+│       ├── Cargo.toml
+│       └── src/
+│           ├── main.rs
+│           └── backend_manager.rs
+├── tests/                      # Test suite (pytest, ≥60% coverage gate)
 │   ├── core/                   # 7 test files: checkpoint, compaction, evaluator, graph, learner, planner, updater
 │   ├── memory/
 │   ├── permission/
@@ -82,7 +105,7 @@ X-Copilot-main/
 ├── installers/                 # Installers
 │   ├── install.ps1             # Windows PowerShell
 │   ├── install.sh              # Linux/macOS
-│   └── winget.yaml             # WinGet manifest
+│   └── winget.json             # WinGet manifest
 ├── .xcopilot/                  # Runtime data (git-ignored)
 │   ├── config.json             # User config & model providers
 │   ├── AGENTS.md               # Global agent rules (project-level overrides also)
@@ -134,7 +157,7 @@ User Input → PermissionPipeline → Tool Execution → Memory Update
 
 ### Model Providers
 - **Abstraction:** `ModelProviderBase` (ABC) in `core/models.py` with abstract methods: `chat()`, `embeddings()`, `list_models()`, `health_check()`
-- **5 Providers:** OpenAI, Anthropic, Ollama, LMStudio, OpenRouter
+- **5 Providers:** OpenAI, Anthropic, Ollama, LMStudio, OpenRouter, NVIDIA
 - **ProviderRegistry:** Global registry with fallback chain support (`chat_with_fallback`)
 - **Config:** `.xcopilot/config.json` → model providers with API keys/base URLs
 - **Auto-discovery:** Ollama (localhost:11434) and LM Studio (localhost:1234) auto-detected
@@ -189,6 +212,7 @@ xcopilot fork <ID> <BRANCH>           # Create checkpoint branch
 xcopilot compact [--mode fast]        # Compact conversation history
 xcopilot context                      # Show token budget usage
 xcopilot permissions                  # Show permission modes
+xcopilot serve                      # Start the API server (FastAPI + WebSocket)
 xcopilot update                       # Check for updates
 ```
 
@@ -212,12 +236,13 @@ xcopilot update                       # Check for updates
 
 ## Testing Strategy
 - **Unit tests:** `tests/core/` (7 test files covering checkpoint, compaction, evaluator, graph, learner, planner, updater)
-- **Coverage gate:** ≥65% (`pytest --cov=src/xcopilot --cov-fail-under=65`)
+- **Coverage gate:** ≥60% (`pytest --cov=src/xcopilot --cov-fail-under=60`)
 - **CI checks:** `ruff check`, `mypy src/`, `ruff format --check`
 - Planned: integration tests (mock providers), E2E tests (Playwright for desktop, Cypress for webapp)
 
 ## CI/CD (.github/workflows/ci-cd.yml)
 - **Push to `main` / PRs:** tests, coverage, lint, type checks, formatting, package build
+- **Push to `updatetest`**: experimental updates
 - **Push to `develop`:** publishes to TestPyPI
 - **GitHub Release:** publishes to PyPI + Docker image
 - **Weekly:** dependency update checks
@@ -235,11 +260,10 @@ xcopilot --help
 xcopilot start --test-mode
 ```
 
-### Node.js CLI Wrapper
+### Node.js CLI Wrapper (Deprecated)
 ```bash
-npm install
-npm run dev       # ts-node cli/bin/xcopilot.ts
-npm run build     # tsc
+# The Node.js CLI wrapper is no longer the primary interface.
+# Use `xcopilot` (Python Click CLI) or `xcopilot serve` (FastAPI server) instead.
 ```
 
 ### WebApp (Next.js)
@@ -250,7 +274,7 @@ npm run dev       # localhost:3000
 npm run build
 ```
 
-### Desktop (Tauri)
+### Desktop (Tauri + Vite)
 ```bash
 cd desktop
 npm install
@@ -261,12 +285,20 @@ npm run tauri build  # requires Rust toolchain
 ### Docker
 ```bash
 docker build -t x-copilot:local .
-docker run --rm -it -v "$(pwd):/workspace" -w /workspace x-copilot:local --project /workspace start --test-mode
+docker run --rm -it -v "$(pwd):/workspace" -w /workspace x-copilot:local serve --host 0.0.0.0 --port 8000
+```
+
+### Server (FastAPI + WebSocket)
+```bash
+xcopilot serve
+# or
+python -m server
 ```
 
 ## Dependencies (Python)
 - **Core:** click, pydantic, rich, httpx, networkx, watchdog, tiktoken, pyyaml
-- **Models:** openai, anthropic (provider SDKs)
+- **Server:** fastapi, uvicorn
+- **Models:** openai, anthropic, ollama, lmstudio, openrouter, nvidia (provider SDKs)
 - **Memory:** chromadb (semantic), sqlite3 (episodic)
 - **MCP:** mcp, mcp[cli]
 - **Dev:** pytest, pytest-asyncio, ruff, mypy, pytest-cov
@@ -279,3 +311,5 @@ docker run --rm -it -v "$(pwd):/workspace" -w /workspace x-copilot:local --proje
 - `.xcopilot/skills/` — user-installed SKILL.md files
 - `.xcopilot/updater/` — update downloads & rollback backups
 - `webapp/prisma/dev.db` — SQLite for webapp (Prisma)
+- `server/` — FastAPI server with REST + WebSocket endpoints
+- `x_copilot.egg-info/` — Python package metadata

@@ -30,16 +30,8 @@ interface RightSidebarProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
   messages: Message[];
+  models: { id: string; name: string; provider: string }[];
 }
-
-const MODELS = [
-  { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI" },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI" },
-  { id: "claude-3-5-sonnet-20241022", name: "Claude 3.5 Sonnet", provider: "Anthropic" },
-  { id: "claude-3-5-haiku-20241022", name: "Claude 3.5 Haiku", provider: "Anthropic" },
-  { id: "gpt-4-turbo", name: "GPT-4 Turbo", provider: "OpenAI" },
-  { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo", provider: "OpenAI" },
-];
 
 const CHAT_SIDEBAR_WIDTH = 320;
 
@@ -52,6 +44,7 @@ export function RightSidebar({
   selectedModel,
   onModelChange,
   messages,
+  models,
 }: RightSidebarProps) {
   return (
     <div
@@ -89,7 +82,7 @@ export function RightSidebar({
               onChange={(e) => onModelChange(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg bg-background"
             >
-              {MODELS.map((model) => (
+              {models.map((model) => (
                 <option key={model.id} value={model.id}>
                   {model.name} ({model.provider})
                 </option>
@@ -99,8 +92,8 @@ export function RightSidebar({
           <div>
             <label className="block text-sm font-medium mb-1">Messages</label>
             <div className="max-h-64 overflow-y-auto space-y-2">
-              {messages.map((msg) => (
-                <div key={msg.id} className="p-2 bg-muted rounded-lg text-sm">
+              {messages.map((msg, index) => (
+                <div key={`${msg.id}-${index}`} className="p-2 bg-muted rounded-lg text-sm">
                   <div className="flex items-center gap-1 mb-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {msg.role === "user" ? (

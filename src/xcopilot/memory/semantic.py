@@ -58,7 +58,7 @@ class SemanticMemory:
             "project": fact.project,
             "type": fact.type,
             "created_at": fact.created_at.isoformat(),
-            "decayed": str(fact.decayed),
+            "decayed": fact.decayed,
             **fact.metadata,
         }
         if fact.last_accessed:
@@ -87,8 +87,8 @@ class SemanticMemory:
             filter_conditions.append({"project": project})
         if type:
             filter_conditions.append({"type": type})
-        # Always exclude decayed facts
-        filter_conditions.append({"decayed": "False"})
+        # Always exclude decayed facts — store as bool false, not string
+        filter_conditions.append({"decayed": False})
 
         if len(filter_conditions) == 1:
             where = filter_conditions[0]
@@ -140,7 +140,7 @@ class SemanticMemory:
                     },
                     created_at=created_at,
                     last_accessed=last_accessed,
-                    decayed=meta.get("decayed", "False") == "True",
+                    decayed=meta.get("decayed") is True or meta.get("decayed") == "True",
                 )
                 facts.append(fact)
 
@@ -155,15 +155,18 @@ class SemanticMemory:
         cutoff_ts = datetime.now(UTC) - timedelta(days=days)
         cutoff_timestamp = cutoff_ts.timestamp()
 
-        # Get all facts with last_accessed older than cutoff
-        all_results = self.collection.get(
-            where={"last_accessed": {"$lt": cutoff_timestamp}},
-        )
-
+        # Paginated fetch: batch size 1000 to avoid OOM on large collections
+        batch_size = 1000
         deleted_count = 0
-        if all_results["ids"]:
+        while True:
+            all_results = self.collection.get(
+                where={"last_accessed": {"$lt": cutoff_timestamp}},
+                limit=batch_size,
+            )
+            if not all_results.get("ids"):
+                break
             self.collection.delete(ids=all_results["ids"])
-            deleted_count = len(all_results["ids"])
+            deleted_count += len(all_results["ids"])
 
         return deleted_count
 

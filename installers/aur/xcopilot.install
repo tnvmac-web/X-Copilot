@@ -1,0 +1,13 @@
+post_install() {
+  echo "X-Copilot installed!"
+  echo "Run 'xcopilot start' to launch the CLI."
+  echo "Run 'xcopilot serve' to start the API server."
+}
+
+post_upgrade() {
+  post_install
+}
+
+post_remove() {
+  echo "X-Copilot removed."
+}

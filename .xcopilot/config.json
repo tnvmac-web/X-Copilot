@@ -31,9 +31,23 @@
       "api_key": "${OPENROUTER_API_KEY}"
     },
     "nvidia": {
-          "api_key": "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",
-          "base_url": "https://integrate.api.nvidia.com/v1"
-        }
+      "api_key": "${NVIDIA_API_KEY}",
+      "base_url": "https://integrate.api.nvidia.com/v1"
+    }
+  },
+  "updater": {
+    "enabled": true,
+    "channel": "stable",
+    "auto_update": true
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "auth": {
+      "enabled": true,
+      "username": "admin",
+      "password": "${XCOPILOT_ADMIN_PASSWORD}"
+    }
   },
   "mcp": {
     "servers": {}
