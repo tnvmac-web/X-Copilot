@@ -44,7 +44,7 @@ jobs:
         run: mypy src/
       
       - name: Run pytest
-        run: pytest tests/ -v --tb=short --cov=src/binari --cov-fail-under=60
+        run: pytest tests/ -v --tb=short --cov=src/xcopilot --cov-fail-under=60
 
   # WebApp tests and build
   webapp-build:
@@ -163,7 +163,7 @@ jobs:
       - name: Download desktop bundle
         uses: actions/download-artifact@v4
         with:
-          name: xcopilot-release-installers
+          name: binari-release-installers
           path: desktop/src-tauri/target/release/bundle/
 
       - name: Create Release

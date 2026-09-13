@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "x-copilot"
+name = "binari"
 version = "0.1.1"
 description = "Self-growing AI agent for Windows with 5-layer memory, auto skill creation, and permission pipeline"
 readme = { file = "README.md", content-type = "text/markdown" }
@@ -50,11 +50,11 @@ dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.4", "mypy>=1.10", "pytest
 cli = ["nodeenv>=1.9"]
 
 [project.entry-points]
-console_scripts = { "xcopilot" = "xcopilot.cli.main:cli" }
+console_scripts = { "xcopilot" = "xcopilot.cli.main:cli", "binari" = "xcopilot.cli.main:cli" }
 
 [tool.setuptools.packages.find]
 where = ["src", "."]
-include = ["xcopilot*", "server*"]
+include = ["xcopilot*", "server*", "binari*"]
 
 [tool.ruff]
 line-length = 100
