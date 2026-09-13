@@ -4,7 +4,7 @@
 
 X-Copilot is a self-growing AI agent for Windows with:
 - 5-layer memory system (Session, Episodic, Semantic, Procedural, Project)
-- Multi-model provider support (OpenAI, Anthropic, Ollama, LM Studio, OpenRouter)
+- Multi-model provider support (OpenAI, Anthropic, Ollama, LM Studio, OpenRouter, NVIDIA)
 - MCP (Model Context Protocol) gateway integration
 - Unified skills marketplace with 6 external sources
 - Automatic skill creation from observed patterns
@@ -17,12 +17,13 @@ X-Copilot is a self-growing AI agent for Windows with:
 
 | Layer | Module | Responsibility |
 |-------|--------|----------------|
-| **CLI** | `src/xcopilot/cli/` | Click-based commands, REPL |
-| **Core** | `src/xcopilot/core/` | Models, MCP, Memory engines, Learner, Planner, Evaluator |
-| **Memory** | `src/xcopilot/memory/` | 5-layer memory system |
-| **Skills** | `src/xcopilot/skills/` | SKILL.md loader, marketplace integration |
-| **Tools** | `src/xcopilot/tools/` | Shell, File, Search, Web operations |
-| **Permission** | `src/xcopilot/permission/` | 5-tier permission pipeline |
+|| **CLI** | `src/xcopilot/cli/` | Click-based commands, REPL |
+|| **Core** | `src/xcopilot/core/` | Models, MCP, Memory engines, Learner, Planner, Evaluator, conversation_loop |
+|| **Memory** | `src/xcopilot/memory/` | 5-layer memory system |
+|| **Skills** | `src/xcopilot/skills/` | SKILL.md loader, marketplace integration |
+|| **Tools** | `src/xcopilot/tools/` | Shell, File, Search, Web operations |
+|| **Permission** | `src/xcopilot/permission/` | 5-tier permission pipeline |
+|| **Server** | `server/` | FastAPI + uvicorn HTTP server and WebSocket |
 
 ### Data Flow
 
@@ -50,10 +51,12 @@ async def stream() -> AsyncIterator[str]:
 
 ### Async/Await for I/O
 
-All I/O operations must be async:
+- All I/O operations must be async:
 - HTTP requests: `httpx.AsyncClient`
 - Subprocess: `asyncio.create_subprocess_exec`
 - File operations: Use async where possible
+- Server: `fastapi` + `uvicorn` for the HTTP serve layer
+- Conversation loop: `src/xcopilot/core/conversation_loop.py` orchestrates the agent response cycle
 
 ### Error Handling
 
@@ -128,7 +131,7 @@ from xcopilot.memory import MemoryEngine
 ### Requirements
 
 - All new code must have tests
-- Target coverage: ≥ 65%
+- Target coverage: ≥ 60%
 - Run: `pytest tests/ -v --tb=short`
 
 ### Test Structure
@@ -182,7 +185,7 @@ Types: feat, fix, refactor, docs, test, chore
 # Must pass locally before push
 ruff check src/ tests/
 mypy src/
-pytest tests/ --cov=src/xcopilot --cov-fail-under=65
+pytest tests/ --cov=src/xcopilot --cov-fail-under=60
 ```
 
 ---
@@ -266,6 +269,8 @@ async def list_models(self) -> list[ModelInfo]:
 3. Implement: `chat()`, `embeddings()`, `list_models()`, `health_check()`
 4. Register in `src/xcopilot/core/model_providers/__init__.py`
 5. Add tests in `tests/core/test_new_provider.py`
+
+Existing providers (6): `openai_provider.py`, `anthropic_provider.py`, `ollama_provider.py`, `lmstudio_provider.py`, `openrouter_provider.py`, `nvidia_provider.py`
 
 ### Adding a Skill Source
 

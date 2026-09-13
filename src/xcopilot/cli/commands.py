@@ -21,7 +21,7 @@ def model():
 
 @model.command("list")
 @click.option(
-    "--provider", help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter)"
+    "help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter, nvidia)"", help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter)"
 )
 @click.pass_context
 def model_list(ctx, provider):
@@ -158,7 +158,7 @@ def model_set_default(ctx, provider):
 @model.command("chat")
 @click.argument("prompt")
 @click.option("--model", "-m", help="Model to use (e.g., gpt-4o, claude-3-5-sonnet)")
-@click.option("--provider", "-p", help="Provider to use")
+@click.option("help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter, nvidia)"", "-p", help="Provider to use")
 @click.option("--temperature", "-t", default=0.7, help="Temperature")
 @click.option("--max-tokens", default=None, type=int, help="Max tokens")
 @click.option("--stream/--no-stream", default=True, help="Stream response")
@@ -213,7 +213,7 @@ def model_chat(ctx, prompt, model, provider, temperature, max_tokens, stream):
 
 @model.command("test")
 @click.option("--model", "-m", help="Model to test")
-@click.option("--provider", "-p", help="Provider to test")
+@click.option("help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter, nvidia)"", "-p", help="Provider to test")
 @click.pass_context
 def model_test(ctx, model, provider):
     """Test a model with a simple prompt."""
@@ -1039,6 +1039,61 @@ def doctor(ctx):
 
     console.print("\n[green]Diagnostics complete![/green]")
 
+
+
+@click.group("setup")
+def setup():
+    """Guided setup wizard."""
+
+
+@setup.command("wizard")
+@click.option("--provider", default=None, help="Default model provider")
+@click.option("--model", default=None, help="Default model name")
+@click.option("--skip/--no-skip", "skip_checks", default=False, help="Skip system checks")
+@click.pass_context
+def setup_wizard(ctx, provider, model, skip_checks):
+    """Run the guided setup wizard."""
+    console.print("[bold cyan]X-Copilot Setup Wizard[/bold cyan]")
+    console.print()
+
+    if not skip_checks:
+        console.print("[1/3] Checking system...")
+        if not provider:
+            provider = click.prompt(
+                "Select default provider",
+                type=click.Choice(["openai", "anthropic", "ollama", "lmstudio", "openrouter", "nvidia"]),
+                default="ollama",
+            )
+        if not model:
+            model = click.prompt("Select default model", default="llama3.1:70b")
+        console.print(f"[green]✓[/green] Provider: [bold]{provider}[/bold], Model: [bold]{model}[/bold]")
+
+    console.print("[2/3] Setting up configuration...")
+    config_path = Path.home() / ".xcopilot" / "config.json"
+    if config_path.exists():
+        console.print("[yellow]! existing config found[/yellow]")
+        if click.confirm("Overwrite existing config?"): 
+            config_path.write_text(json.dumps({
+                "default_provider": provider,
+                "default_model": model,
+                "api_mode": "chat_completions",
+                "mcp_servers": {},
+                "skills": [],
+            }, indent=2))
+        console.print("[green]✓[/green] Configuration updated")
+    else:
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        config_path.write_text(json.dumps({
+            "default_provider": provider,
+            "default_model": model,
+            "api_mode": "chat_completions",
+            "mcp_servers": {},
+            "skills": [],
+        }, indent=2))
+        console.print("[green]✓[/green] Configuration created at [dim]{path}[/dim]".format(path=config_path))
+
+    console.print("[3/3] Verifying setup...")
+    console.print("[green]✓[/green] Setup complete! Run [bold]xcopilot start[/bold] to begin.[/green]")
 
 @click.group()
 def run():

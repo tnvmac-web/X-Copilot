@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from xcopilot.core.models import APIMode
 from xcopilot.core.model_providers.anthropic_provider import register_anthropic
 from xcopilot.core.model_providers.lmstudio_provider import register_lmstudio
 from xcopilot.core.model_providers.nvidia_provider import register_nvidia
@@ -17,6 +18,16 @@ __all__ = [
     "register_openai",
     "register_openrouter",
 ]
+
+
+PROVIDER_API_MODES = {
+    "openai": APIMode.CHAT_COMPLETIONS,
+    "nvidia": APIMode.CHAT_COMPLETIONS,
+    "openrouter": APIMode.CHAT_COMPLETIONS,
+    "ollama": APIMode.CHAT_COMPLETIONS,
+    "lmstudio": APIMode.CHAT_COMPLETIONS,
+    "anthropic": APIMode.ANTHROPIC_MESSAGES,
+}
 
 
 def register_all_providers(config: dict | None = None) -> None:

@@ -11,6 +11,31 @@ import httpx
 import openai
 
 
+class APIMode(Enum):
+    """API execution modes for model providers.
+
+    Each provider resolves to one of these modes based on its API shape.
+    See Hermes Agent provider-runtime docs for details.
+    """
+
+    CHAT_COMPLETIONS = "chat_completions"
+    CODEX_RESPONSES = "codex_responses"
+    ANTHROPIC_MESSAGES = "anthropic_messages"
+
+    @classmethod
+    def from_provider(cls, provider_type: "ModelProvider") -> "APIMode":
+        """Resolve API mode for a given provider."""
+        mapping = {
+            ModelProvider.OPENAI: cls.CHAT_COMPLETIONS,
+            ModelProvider.NVIDIA: cls.CHAT_COMPLETIONS,
+            ModelProvider.OPENROUTER: cls.CHAT_COMPLETIONS,
+            ModelProvider.OLLAMA: cls.CHAT_COMPLETIONS,
+            ModelProvider.LMSTUDIO: cls.CHAT_COMPLETIONS,
+            ModelProvider.ANTHROPIC: cls.ANTHROPIC_MESSAGES,
+        }
+        return mapping.get(provider_type, cls.CHAT_COMPLETIONS)
+
+
 class ModelProvider(Enum):
     """Supported model providers."""
 
@@ -18,12 +43,7 @@ class ModelProvider(Enum):
     ANTHROPIC = "anthropic"
     OLLAMA = "ollama"
     LMSTUDIO = "lmstudio"
-    FOUNDRY = "foundry"
     OPENROUTER = "openrouter"
-    AZURE = "azure"
-    GEMINI = "gemini"
-    DEEPSEEK = "deepseek"
-    XAI = "xai"
     NVIDIA = "nvidia"
     CUSTOM = "custom"
 
@@ -46,6 +66,7 @@ class ModelInfo:
     id: str
     name: str
     provider: ModelProvider
+    api_mode: APIMode = APIMode.CHAT_COMPLETIONS
     capabilities: list[ModelCapability] = field(default_factory=list)
     context_window: int = 4096
     max_output_tokens: int = 4096
@@ -71,6 +92,7 @@ class ChatResponse:
     content: str
     model: str
     provider: ModelProvider
+    api_mode: APIMode = APIMode.CHAT_COMPLETIONS
     usage: dict = field(default_factory=dict)  # prompt_tokens, completion_tokens, total_tokens
     finish_reason: str = "stop"
     tool_calls: list | None = None
@@ -84,6 +106,7 @@ class EmbeddingResponse:
     embeddings: list[list[float]]
     model: str
     provider: ModelProvider
+    api_mode: APIMode = APIMode.CHAT_COMPLETIONS
     usage: dict = field(default_factory=dict)
 
 
@@ -93,6 +116,7 @@ class ModelProviderBase(ABC):
     def __init__(self, config: dict):
         self.config = config
         self._models_cache: list[ModelInfo] = []
+        self.api_mode = APIMode.from_provider(self.provider_type)
 
     @property
     @abstractmethod

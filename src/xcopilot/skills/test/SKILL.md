@@ -2,7 +2,7 @@
 name: test
 description: Run tests and verify functionality
 triggers: [test, verify, check, pytest]
-compatible_agents: [xcopilot, claude-code, codex, cursor]
+compatible_agents: [xcopilot, claude-code, codex, cursor, windsurf]
 version: 1.0.0
 ---
 # Test Skill
@@ -48,7 +48,7 @@ Comprehensive testing workflow for verifying code functionality and quality.
 - [ ] Run tests in parallel for speed
 - [ ] Generate coverage reports
 
-### 5. Test Maintenance
+### 6. Test Maintenance
 - [ ] Remove flaky tests
 - [ ] Update tests when behavior changes
 - [ ] Keep test data current

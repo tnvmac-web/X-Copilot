@@ -100,12 +100,14 @@ skill_path = mem.create_skill(
 
 ## Skills Marketplace
 
-X-Copilot connects to the agent-skills ecosystem:
+X-Copilot connects to the **UnifiedMarketplace**, which aggregates skills from 6 external sources:
 
-- **anthropics/skills** (~173K★) — Official Anthropic skills for Claude
-- **addyosmani/agent-skills** (~87K★) — 24 production-grade engineering skills
-- **vercel-labs/agent-skills** (~29K★) — Vercel's official collection
-- **voltagent/awesome-agent-skills** (~31K★) — 1000+ curated skills
+1. **GitHub Repos** — `addyosmani/agent-skills`, `anthropics/skills`, `vercel-labs/agent-skills`, `voltagent/awesome-agent-skills`
+2. **AgentMemory** (`rohitg00/agentmemory`) — Persistent memory backend for AI agents
+3. **OpenViking** (`volcengine/OpenViking`) — Unified memory, RAG, and skills
+4. **Browser-Use** (`browser-use/browser-use`) — Browser automation tool
+5. **Anthropic Cybersecurity Skills** (`mukul975/anthropic-cybersecurity-skills`) — 818 structured skills
+6. **Scientific Agent Skills** (`k-dense-ai/scientific-agent-skills`) — 165 validated skills
 
 ### CLI Commands
 

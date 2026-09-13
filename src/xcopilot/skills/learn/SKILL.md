@@ -2,7 +2,7 @@
 name: learn
 description: Understand new codebase or technology
 triggers: [learn, study, understand, explore, onboard]
-compatible_agents: [xcopilot, claude-code, codex, cursor]
+compatible_agents: [xcopilot, claude-code, codex, cursor, windsurf]
 version: 1.0.0
 ---
 # Learn Skill

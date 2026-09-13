@@ -41,6 +41,8 @@ dependencies = [
     "httpx>=0.27",
     "fastapi>=0.110",
     "uvicorn>=0.30",
+    "prompt_toolkit>=3.0",
+    "Pygments>=2.16",
 ]
 
 [project.optional-dependencies]

@@ -319,6 +319,10 @@ try {
     Write-Host ""
     Write-Host "Start Menu shortcuts created in: X-Copilot"
     Write-Host ""
+    Write-Host ""
+    Write-Host "Docker Compose:"
+    Write-Host "  docker-compose up -d    # Start all services (backend + webapp)"
+    Write-Host ""
     Write-Host "Note: Restart your terminal/PowerShell for PATH changes to take effect."
     
 } catch {

@@ -19,6 +19,9 @@ from fastapi.responses import StreamingResponse
 from xcopilot.core.conversation_loop import ConversationLoop
 from xcopilot.core.model_providers import register_all_providers
 from xcopilot.core.models import ChatMessage, ModelCapability, ModelProvider, registry
+from xcopilot.memory import MemoryEngine
+from xcopilot.skills import marketplace
+from xcopilot.core.graph import KnowledgeGraph
 
 AUTH_SECRET = os.environ.get("XCOPILOT_AUTH_SECRET", "xcopilot-local-dev-secret")
 DEFAULT_USERNAME = os.environ.get("XCOPILOT_ADMIN_USERNAME", "admin")
@@ -387,6 +390,74 @@ async def chat_stream_endpoint(
 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
+
+
+# Memory API
+@app.get("/api/memory")
+async def get_memory(user_id: str = Depends(require_auth), type: str = "all", search: str = ""):
+    """Get memory items."""
+    try:
+        engine = MemoryEngine()
+        items = engine.search(user_id, type, search) if search else engine.list(user_id, type)
+        return {"memories": [{"id": m.id, "type": m.type, "content": m.content, "timestamp": str(m.timestamp), "tags": m.tags} for m in items]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/memory")
+async def clear_memory(user_id: str = Depends(require_auth)):
+    """Clear all memory."""
+    try:
+        engine = MemoryEngine()
+        engine.clear(user_id)
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Skills Marketplace API
+@app.get("/api/skills/marketplace")
+async def get_marketplace(user_id: str = Depends(require_auth)):
+    """Get skills marketplace repos."""
+    try:
+        repos = marketplace.get_repos()
+        return {"repos": repos}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/skills/install")
+async def install_skill(user_id: str = Depends(require_auth), payload: dict[str, Any] = None):
+    """Install a skill from marketplace."""
+    try:
+        repo_id = payload.get("repoId") if payload else None
+        result = marketplace.install(repo_id)
+        return {"success": True, "result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# Projects API
+@app.get("/api/projects")
+async def get_projects(user_id: str = Depends(require_auth)):
+    """Get user projects."""
+    try:
+        graph = KnowledgeGraph()
+        projects = graph.list_projects(user_id)
+        return {"projects": projects}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/projects")
+async def create_project(user_id: str = Depends(require_auth), payload: dict[str, Any] = None):
+    """Create a new project."""
+    try:
+        name = payload.get("name", "") if payload else ""
+        path = payload.get("path", "") if payload else ""
+        description = payload.get("description", "") if payload else ""
+        graph = KnowledgeGraph()
+        project = graph.create_project(user_id, name, path, description)
+        return {"success": True, "project": project}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.websocket("/api/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:

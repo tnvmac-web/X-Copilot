@@ -2,7 +2,7 @@
 name: code-review
 description: Review code for bugs, security, best practices
 triggers: [review, code-review, PR review]
-compatible_agents: [xcopilot, claude-code, codex, cursor]
+compatible_agents: [xcopilot, claude-code, codex, cursor, windsurf]
 version: 1.0.0
 ---
 # Code Review Skill

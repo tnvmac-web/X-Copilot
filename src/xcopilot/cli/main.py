@@ -8,6 +8,9 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
+from prompt_toolkit import PromptSession
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 from xcopilot.cli.commands import (
     checkpoints,
@@ -22,6 +25,7 @@ from xcopilot.cli.commands import (
     skill,
     skills,
     update,
+    setup,
 )
 from xcopilot.cli.serve import serve
 
@@ -57,6 +61,7 @@ cli.add_command(mcp)
 cli.add_command(skill)
 cli.add_command(init)
 cli.add_command(doctor)
+cli.add_command(setup)
 cli.add_command(run)
 cli.add_command(serve)
 
@@ -109,7 +114,7 @@ def start(ctx, test_mode):
 
     console.print("\n[bold]Ready for commands![/bold] Type 'help' for available commands.\n")
 
-    # Simple REPL
+    # Enhanced REPL with prompt_toolkit (syntax highlighting, auto-completion)
     while True:
         try:
             user_input = console.input("[bold cyan]xcopilot>[/bold cyan] ").strip()

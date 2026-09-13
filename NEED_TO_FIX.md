@@ -1,6 +1,23 @@
 # X-Copilot — Needs Fix
 
 Auto-generated from full codebase review (2026-09-12).
+**Status updated: 2026-09-13 — several issues have been partially or fully resolved.**
+
+---
+
+## ✅ Fixed Since Review (2026-09-13)
+
+The following issues from the original review have been resolved:
+
+| Issue | Resolution |
+|-------|------------|
+| **#9 MCPGateway hardcoded request IDs** | Replaced with `_next_request_id()` counter pattern in `src/xcopilot/core/mcp_gateway.py` |
+| **Conversation loop** | Added `src/xcopilot/core/conversation_loop.py` — lightweight agent loop for prompt→tool→response |
+| **API server** | Added `server/main.py` — FastAPI app with REST + WebSocket endpoint at `/api/ws` |
+| **CLI `serve` command** | Added `src/xcopilot/cli/serve.py` — runs uvicorn server |
+| **NVIDIA provider** | Added `src/xcopilot/core/model_providers/nvidia_provider.py` — OpenAI-compatible NVIDIA API |
+| **SemanticMemory.decay pagination** | Added paginated batch fetching (1000/batch) to prevent OOM |
+| **ModelCapability enum unused** | Now referenced by `server/main.py` for feature flags |
 
 ---
 
@@ -33,9 +50,6 @@ Dead code — never referenced by any provider implementation.
 
 ### 8. ProviderRegistry.get_default — silent fallback (`src/xcopilot/core/models.py:174`)
 Returns first registered provider when no default set. Wrong provider used without user knowledge. Should raise or log explicitly.
-
-### 9. MCPGateway — hardcoded request IDs (`src/xcopilot/core/mcp_gateway.py:157`)
-Uses `id: 1, 2, 3, 4, 5` for every request. Overlapping requests get mismatched responses. Needs incrementing IDs or pending-requests map.
 
 ### 10. MCPGateway — SSE transport incomplete (`src/xcopilot/core/mcp_gateway.py:127`)
 Only POST `/mcp` for init, never establishes SSE event stream (`/sse`). Cannot receive server-to-client notifications.
@@ -108,7 +122,7 @@ Memory layers, learner+planner+evaluator together, full CLI REPL — none covere
 `UpdateConfig`, `MCPServerConfig` accept any value — invalid transport strings pass silently.
 
 ### 28. AGENTS.md compliance — verify `__future__.annotations`
-Check all 50 files actually have it (most do, but verify `tools/search.py`, `tools/web.py`).
+Check all files actually have it (most do, but verify `tools/search.py`, `tools/web.py`).
 
 ---
 
@@ -116,6 +130,6 @@ Check all 50 files actually have it (most do, but verify `tools/search.py`, `too
 
 | Priority | Items | Reason |
 |----------|-------|--------|
-| Fix now  | 1–5, 14–17 | Correctness bugs + blocking async violations |
-| Fix soon | 6–13, 18–22 | Architecture debt + robustness |
-| Track    | 23–28 | Test coverage, logging, docs |
+| Fix now | 1–5, 14–17 | Correctness bugs + blocking async violations |
+| Fix soon | 6–8, 10–13, 18–22 | Architecture debt + robustness |
+| Track | 23–28 | Test coverage, logging, docs |
