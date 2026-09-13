@@ -23,7 +23,7 @@ class APIMode(Enum):
     ANTHROPIC_MESSAGES = "anthropic_messages"
 
     @classmethod
-    def from_provider(cls, provider_type: "ModelProvider") -> "APIMode":
+    def from_provider(cls, provider_type: ModelProvider) -> APIMode:
         """Resolve API mode for a given provider."""
         mapping = {
             ModelProvider.OPENAI: cls.CHAT_COMPLETIONS,
@@ -226,7 +226,13 @@ class ProviderRegistry:
                 models = await provider.list_models()
                 if any(m.id == model for m in models):
                     return await provider.chat(messages, model, **kwargs)
-            except (httpx.HTTPError, openai.APIError, openai.APIConnectionError, ValueError, RuntimeError) as e:
+            except (
+                httpx.HTTPError,
+                openai.APIError,
+                openai.APIConnectionError,
+                ValueError,
+                RuntimeError,
+            ) as e:
                 last_error = e
                 continue
 

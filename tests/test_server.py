@@ -54,14 +54,16 @@ def test_websocket_prompt_roundtrip() -> None:
         welcome = websocket.receive_json()
         assert welcome["type"] == "connected"
 
-        websocket.send_json({
-            "method": "prompt.submit",
-            "params": {
-                "session_id": "session-123",
-                "messages": [{"role": "user", "content": "ping"}],
-                "model": "gpt-4o-mini",
-            },
-        })
+        websocket.send_json(
+            {
+                "method": "prompt.submit",
+                "params": {
+                    "session_id": "session-123",
+                    "messages": [{"role": "user", "content": "ping"}],
+                    "model": "gpt-4o-mini",
+                },
+            }
+        )
 
         event = websocket.receive_json()
         assert event["type"] in {"message.delta", "message.complete", "error"}

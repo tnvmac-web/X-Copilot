@@ -39,12 +39,12 @@ class CompactionManager:
         return self._encoding
 
     def _count_tokens(self, text: str) -> int:
-            """Count tokens in text. Returns 0 if tiktoken unavailable."""
-            encoding = self._get_encoding()
-            if encoding is None:
-                # Fallback: ~1 token per 4 chars
-                return len(text) // 4 + 1
-            return len(encoding.encode(text))
+        """Count tokens in text. Returns 0 if tiktoken unavailable."""
+        encoding = self._get_encoding()
+        if encoding is None:
+            # Fallback: ~1 token per 4 chars
+            return len(text) // 4 + 1
+        return len(encoding.encode(text))
 
     def get_budget(self) -> BudgetInfo:
         """Return current token budget breakdown."""

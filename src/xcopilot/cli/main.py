@@ -8,9 +8,6 @@ import click
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
-from prompt_toolkit import PromptSession
-from prompt_toolkit.history import FileHistory
-from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 from xcopilot.cli.commands import (
     checkpoints,
@@ -22,10 +19,10 @@ from xcopilot.cli.commands import (
     memory,
     model,
     run,
+    setup,
     skill,
     skills,
     update,
-    setup,
 )
 from xcopilot.cli.serve import serve
 

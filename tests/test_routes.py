@@ -1,6 +1,7 @@
 """Tests for server API routes."""
 
 import os
+
 import pytest
 
 
@@ -42,11 +43,21 @@ class TestServerRoutes:
         with open(server_path) as f:
             source = f.read()
         expected = [
-            "/health", "/ready", "/api/status", "/api/config",
-            "/api/models", "/api/providers", "/api/settings",
-            "/api/auth/login", "/api/sessions", "/api/chat",
-            "/api/chat/stream", "/api/ws", "/api/memory",
-            "/api/skills/marketplace", "/api/projects",
+            "/health",
+            "/ready",
+            "/api/status",
+            "/api/config",
+            "/api/models",
+            "/api/providers",
+            "/api/settings",
+            "/api/auth/login",
+            "/api/sessions",
+            "/api/chat",
+            "/api/chat/stream",
+            "/api/ws",
+            "/api/memory",
+            "/api/skills/marketplace",
+            "/api/projects",
         ]
         for route in expected:
             assert route in source, f"Missing route: {route}"

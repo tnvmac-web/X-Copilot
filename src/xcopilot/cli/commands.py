@@ -21,7 +21,9 @@ def model():
 
 @model.command("list")
 @click.option(
-    "help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter, nvidia)"", help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter)"
+    "--provider",
+    "-p",
+    help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter, nvidia)",
 )
 @click.pass_context
 def model_list(ctx, provider):
@@ -158,7 +160,11 @@ def model_set_default(ctx, provider):
 @model.command("chat")
 @click.argument("prompt")
 @click.option("--model", "-m", help="Model to use (e.g., gpt-4o, claude-3-5-sonnet)")
-@click.option("help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter, nvidia)"", "-p", help="Provider to use")
+@click.option(
+    "--provider",
+    "-p",
+    help="Provider to use (openai, anthropic, ollama, lmstudio, openrouter, nvidia)",
+)
 @click.option("--temperature", "-t", default=0.7, help="Temperature")
 @click.option("--max-tokens", default=None, type=int, help="Max tokens")
 @click.option("--stream/--no-stream", default=True, help="Stream response")
@@ -213,7 +219,11 @@ def model_chat(ctx, prompt, model, provider, temperature, max_tokens, stream):
 
 @model.command("test")
 @click.option("--model", "-m", help="Model to test")
-@click.option("help="Filter by provider (openai, anthropic, ollama, lmstudio, openrouter, nvidia)"", "-p", help="Provider to test")
+@click.option(
+    "--provider",
+    "-p",
+    help="Provider to test (openai, anthropic, ollama, lmstudio, openrouter, nvidia)",
+)
 @click.pass_context
 def model_test(ctx, model, provider):
     """Test a model with a simple prompt."""
@@ -1040,7 +1050,6 @@ def doctor(ctx):
     console.print("\n[green]Diagnostics complete![/green]")
 
 
-
 @click.group("setup")
 def setup():
     """Guided setup wizard."""
@@ -1061,39 +1070,56 @@ def setup_wizard(ctx, provider, model, skip_checks):
         if not provider:
             provider = click.prompt(
                 "Select default provider",
-                type=click.Choice(["openai", "anthropic", "ollama", "lmstudio", "openrouter", "nvidia"]),
+                type=click.Choice(
+                    ["openai", "anthropic", "ollama", "lmstudio", "openrouter", "nvidia"]
+                ),
                 default="ollama",
             )
         if not model:
             model = click.prompt("Select default model", default="llama3.1:70b")
-        console.print(f"[green]✓[/green] Provider: [bold]{provider}[/bold], Model: [bold]{model}[/bold]")
+        console.print(
+            f"[green]✓[/green] Provider: [bold]{provider}[/bold], Model: [bold]{model}[/bold]"
+        )
 
     console.print("[2/3] Setting up configuration...")
     config_path = Path.home() / ".xcopilot" / "config.json"
     if config_path.exists():
         console.print("[yellow]! existing config found[/yellow]")
-        if click.confirm("Overwrite existing config?"): 
-            config_path.write_text(json.dumps({
-                "default_provider": provider,
-                "default_model": model,
-                "api_mode": "chat_completions",
-                "mcp_servers": {},
-                "skills": [],
-            }, indent=2))
+        if click.confirm("Overwrite existing config?"):
+            config_path.write_text(
+                json.dumps(
+                    {
+                        "default_provider": provider,
+                        "default_model": model,
+                        "api_mode": "chat_completions",
+                        "mcp_servers": {},
+                        "skills": [],
+                    },
+                    indent=2,
+                )
+            )
         console.print("[green]✓[/green] Configuration updated")
     else:
         config_path.parent.mkdir(parents=True, exist_ok=True)
-        config_path.write_text(json.dumps({
-            "default_provider": provider,
-            "default_model": model,
-            "api_mode": "chat_completions",
-            "mcp_servers": {},
-            "skills": [],
-        }, indent=2))
-        console.print("[green]✓[/green] Configuration created at [dim]{path}[/dim]".format(path=config_path))
+        config_path.write_text(
+            json.dumps(
+                {
+                    "default_provider": provider,
+                    "default_model": model,
+                    "api_mode": "chat_completions",
+                    "mcp_servers": {},
+                    "skills": [],
+                },
+                indent=2,
+            )
+        )
+        console.print(f"[green]✓[/green] Configuration created at [dim]{config_path}[/dim]")
 
     console.print("[3/3] Verifying setup...")
-    console.print("[green]✓[/green] Setup complete! Run [bold]xcopilot start[/bold] to begin.[/green]")
+    console.print(
+        "[green]✓[/green] Setup complete! Run [bold]xcopilot start[/bold] to begin.[/green]"
+    )
+
 
 @click.group()
 def run():
@@ -1108,25 +1134,22 @@ def run_webapp(ctx, port, host):
     """Run the WebApp (Next.js)."""
     import os
     import subprocess
-    
+
     webapp_dir = Path.cwd() / "webapp"
     if not webapp_dir.exists():
-        console.print("[red]WebApp directory not found. Make sure you're in the X-Copilot project root.[/red]")
+        console.print(
+            "[red]WebApp directory not found. Make sure you're in the X-Copilot project root.[/red]"
+        )
         return
-    
+
     console.print(f"[green]Starting WebApp on http://{host}:{port}[/green]")
-    
+
     env = os.environ.copy()
     env["PORT"] = str(port)
     env["HOSTNAME"] = host
-    
+
     try:
-        subprocess.run(
-            ["npm", "run", "dev"],
-            cwd=webapp_dir,
-            env=env,
-            check=True
-        )
+        subprocess.run(["npm", "run", "dev"], cwd=webapp_dir, env=env, check=True)
     except subprocess.CalledProcessError as e:
         console.print(f"[red]Failed to start WebApp: {e}[/red]")
     except FileNotFoundError:
@@ -1139,20 +1162,19 @@ def run_desktop(ctx):
     """Run the Desktop App (Tauri)."""
     import os
     import subprocess
-    
+
     desktop_dir = Path.cwd() / "desktop"
     if not desktop_dir.exists():
-        console.print("[red]Desktop directory not found. Make sure you're in the X-Copilot project root.[/red]")
+        console.print(
+            "[red]Desktop directory not found. Make sure you're in the X-Copilot project root.[/red]"
+        )
         return
-    
+
     console.print("[green]Starting Desktop App (Tauri dev mode)...[/green]")
-    
+
     try:
         subprocess.run(
-            ["npm", "run", "tauri", "dev"],
-            cwd=desktop_dir,
-            env=os.environ.copy(),
-            check=True
+            ["npm", "run", "tauri", "dev"], cwd=desktop_dir, env=os.environ.copy(), check=True
         )
     except subprocess.CalledProcessError as e:
         console.print(f"[red]Failed to start Desktop App: {e}[/red]")
@@ -1170,51 +1192,45 @@ def run_all(ctx, webapp_port, webapp_host):
     import signal
     import subprocess
     import sys
-    
+
     webapp_dir = Path.cwd() / "webapp"
     desktop_dir = Path.cwd() / "desktop"
-    
+
     if not webapp_dir.exists() or not desktop_dir.exists():
         console.print("[red]WebApp or Desktop directory not found.[/red]")
         return
-    
+
     console.print("[green]Starting WebApp and Desktop App...[/green]")
-    
+
     env = os.environ.copy()
     env["PORT"] = str(webapp_port)
     env["HOSTNAME"] = webapp_host
-    
+
     processes = []
-    
+
     def cleanup(signum=None, frame=None):
         console.print("\n[yellow]Shutting down...[/yellow]")
         for p in processes:
             if p.poll() is None:
                 p.terminate()
         sys.exit(0)
-    
+
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
-    
+
     try:
-        webapp_proc = subprocess.Popen(
-            ["npm", "run", "dev"],
-            cwd=webapp_dir,
-            env=env
-        )
+        webapp_proc = subprocess.Popen(["npm", "run", "dev"], cwd=webapp_dir, env=env)
         processes.append(webapp_proc)
-        
+
         desktop_proc = subprocess.Popen(
-            ["npm", "run", "tauri", "dev"],
-            cwd=desktop_dir,
-            env=os.environ.copy()
+            ["npm", "run", "tauri", "dev"], cwd=desktop_dir, env=os.environ.copy()
         )
         processes.append(desktop_proc)
-        
+
         # Wait for both processes
         for p in processes:
             p.wait()
-            
+
     except FileNotFoundError:
         console.print("[red]npm or cargo not found. Please install Node.js and Rust first.[/red]")
     except KeyboardInterrupt:

@@ -71,14 +71,18 @@ class ConversationLoop:
         if not model_info or not model_info.context_window:
             return messages, max_tokens
 
-        output_tokens = min(max_tokens or model_info.max_output_tokens, model_info.max_output_tokens)
+        output_tokens = min(
+            max_tokens or model_info.max_output_tokens, model_info.max_output_tokens
+        )
         input_budget = max(model_info.context_window - output_tokens, 256)
         estimated_tokens = sum(max(1, len(message.content) // 4) for message in messages)
         if estimated_tokens <= input_budget:
             return messages, output_tokens
 
         system_messages = [message for message in messages if message.role == "system"]
-        remaining = input_budget - sum(max(1, len(message.content) // 4) for message in system_messages)
+        remaining = input_budget - sum(
+            max(1, len(message.content) // 4) for message in system_messages
+        )
         selected: list[ChatMessage] = []
         for message in reversed([item for item in messages if item.role != "system"]):
             message_tokens = max(1, len(message.content) // 4)

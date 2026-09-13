@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from xcopilot.core.models import APIMode
 from xcopilot.core.model_providers.anthropic_provider import register_anthropic
 from xcopilot.core.model_providers.lmstudio_provider import register_lmstudio
 from xcopilot.core.model_providers.nvidia_provider import register_nvidia
 from xcopilot.core.model_providers.ollama_provider import register_ollama
 from xcopilot.core.model_providers.openai_provider import register_openai
 from xcopilot.core.model_providers.openrouter_provider import register_openrouter
+from xcopilot.core.models import APIMode
 
 __all__ = [
     "register_anthropic",

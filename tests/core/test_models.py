@@ -1,16 +1,25 @@
 """Tests for models.py including APIMode abstraction."""
 
 import pytest
+
 from xcopilot.core.models import (
     APIMode,
-    ModelProvider,
-    ModelInfo,
-    ChatMessage,
     ChatResponse,
     EmbeddingResponse,
+    ModelInfo,
+    ModelProvider,
     ModelProviderBase,
     registry,
 )
+
+
+@pytest.fixture(autouse=True)
+def reset_registry():
+    """Keep the global provider registry isolated between tests."""
+    registry._providers.clear()
+    registry._default_provider = None
+    registry._fallback_chain.clear()
+    yield
 
 
 class TestAPIMode:
@@ -76,10 +85,7 @@ class TestChatResponse:
     """Tests for ChatResponse dataclass."""
 
     def test_chat_response_defaults(self):
-        msg = ChatMessage(role="user", content="hello")
-        response = ChatResponse(
-            content="hi", model="test", provider=ModelProvider.OPENAI
-        )
+        response = ChatResponse(content="hi", model="test", provider=ModelProvider.OPENAI)
         assert response.api_mode == APIMode.CHAT_COMPLETIONS
         assert response.finish_reason == "stop"
 
@@ -148,6 +154,7 @@ class TestRegistry:
 
     def test_registry_list_all_models(self):
         import asyncio
+
         result = asyncio.run(registry.list_all_models())
         assert isinstance(result, dict)
 

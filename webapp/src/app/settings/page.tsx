@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const [apiUrl, setApiUrl] = useState(process.env.NEXT_PUBLIC_XCOPILOT_API_URL || "http://127.0.0.1:8000");
   const [username, setUsername] = useState("");
   const [saved, setSaved] = useState(false);
-  const { isConnected } = useWebSocket();
+  const { status } = useWebSocket({ url: `${apiUrl}/api/ws` });
 
   const handleSave = async () => {
     try {
@@ -79,7 +79,7 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <p className="text-white">
-              WebSocket: {isConnected ? "Connected" : "Disconnected"}
+              WebSocket: {status === "open" ? "Connected" : "Disconnected"}
             </p>
           </CardContent>
         </Card>
