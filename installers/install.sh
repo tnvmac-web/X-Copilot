@@ -1,9 +1,9 @@
 #!/bin/bash
-# Binari Linux/macOS Installer
+# X-Copilot Linux/macOS Installer
 
 set -euo pipefail
 
-INSTALL_PATH="${INSTALL_PATH:-$HOME/.local/share/binari}"
+INSTALL_PATH="${INSTALL_PATH:-$HOME/.local/share/xcopilot}"
 BRANCH="${BRANCH:-dev}"
 REPO_URL="https://github.com/tnvmac-web/X-Copilot.git"
 

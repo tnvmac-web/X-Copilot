@@ -1,4 +1,4 @@
-# Binari
+# X-Copilot
 
 X-Copilot is a Python 3.11+ command-line agent for Windows and Linux. It
 provides project memory, skills, checkpoints, permissions, context budgeting,
@@ -40,7 +40,7 @@ python -m pip install -e ".[dev]"
 Verify the installation:
 
 ```bash
-binari --help
+xcopilot --help
 xcopilot --version
 ```
 

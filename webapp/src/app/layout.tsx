@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Binari",
+  title: "X-Copilot",
   description: "Self-growing AI agent platform",
 };
 
