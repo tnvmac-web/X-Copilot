@@ -4,7 +4,7 @@ WORKDIR /app
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    XCOPILOT_AUTH_SECRET=xcopilot-production-secret \
+    BINARI_AUTH_SECRET=binari-production-secret \
     XCOPILOT_ADMIN_USERNAME=admin \
     XCOPILOT_ADMIN_PASSWORD=admin
 
