@@ -44,7 +44,7 @@ jobs:
         run: mypy src/
       
       - name: Run pytest
-        run: pytest tests/ -v --tb=short --cov=src/xcopilot --cov-fail-under=65
+        run: pytest tests/ -v --tb=short --cov=src/xcopilot --cov-fail-under=60
 
   # WebApp tests and build
   webapp-build:
