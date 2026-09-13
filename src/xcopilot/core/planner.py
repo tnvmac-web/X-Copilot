@@ -51,17 +51,34 @@ class PlannerEngine:
                 self.profile.preferred_tools.append(tool)
 
     def _added_type_hints(self, before: str, after: str) -> bool:
-        """Check if type hints were added."""
-        before_hints = len(re.findall(r":\s*\w+", before))
-        after_hints = len(re.findall(r":\s*\w+", after))
+        """Check if type hints were added.
+
+        Matches only PEP 484-style annotations: name: Type or def name(...): Type
+        """
+        # Match: identifier : whitespace *type* — must be preceded by a valid name start
+        hint_pattern = r"\b\w+\s*:\s*(?:int|str|bool|float|list|dict|set|tuple|None|Callable|Iterable|AsyncIterator|Path|dict\[|list\[|\|)"
+        before_hints = len(re.findall(hint_pattern, before))
+        after_hints = len(re.findall(hint_pattern, after))
         return after_hints > before_hints
 
     def _detect_money_as_cents(self, before: str, after: str) -> bool:
-        """Check if float money was converted to cents."""
-        # Look for pattern: variable = float -> variable_cents = int
-        before_has_float = bool(re.search(r"\w+\s*=\s*\d+\.\d+", before))
-        after_has_cents = bool(re.search(r"\w+_cents\s*=\s*\d+", after))
-        return before_has_float and after_has_cents
+            """Check if float money was converted to cents.
+
+            Matches patterns like: variable = float_var * 100, variable_cents = int(...)
+            """
+            # Before: has a float assignment (price * 100, cost * 1.0, etc.)
+            before_has_float = bool(
+                re.search(r"\w+\s*=\s*\d+\.\d+", before)  # price = 19.99
+                or re.search(r"\w+\s*=\s*\w+\s*\*\s*100", before)  # price = cost * 100
+                or re.search(r"\w+\s*=\s*\d+\.\d+\s*(\*|/)\s*\d+", before)  # price = 19.99 * 100
+            )
+            # After: has a _cents = int(...) or _cents = ... * 100 pattern
+            after_has_cents = bool(
+                re.search(r"\w+_cents\s*=\s*int\(", after)
+                or re.search(r"\w+_cents\s*=\s*\w+\s*\*\s*100", after)
+                or re.search(r"\w+_cents\s*=\s*\d+", after)
+            )
+            return before_has_float and after_has_cents
 
     def _detect_indent_change(self, before: str, after: str) -> int | None:
         """Detect indentation style from code."""

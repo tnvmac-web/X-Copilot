@@ -168,11 +168,16 @@ class ProviderRegistry:
         self._fallback_chain = [p for p in chain if p in self._providers]
 
     def get_default(self) -> ModelProviderBase | None:
-        """Get default provider."""
+        """Get default provider. Raises if no default configured and multiple providers exist."""
         if self._default_provider:
             return self._providers.get(self._default_provider)
-        # Return first available
-        return next(iter(self._providers.values()), None)
+        # No default set — if only one provider, return it
+        if len(self._providers) == 1:
+            return next(iter(self._providers.values()))
+        raise RuntimeError(
+            "No default provider configured and multiple providers registered. "
+            f"Set a default or call set_default(). Providers: {list(self._providers.keys())}"
+        )
 
     async def chat_with_fallback(
         self,

@@ -24,11 +24,27 @@ class CompactionManager:
     def __init__(self, max_tokens: int = 8192) -> None:
         self.max_tokens = max_tokens
         self.conversation_history: list[str] = []
-        self._encoding = tiktoken.get_encoding("cl100k_base")
+        self._encoding: tiktoken.Encoding | None = None
+        self._encoding_name = "cl100k_base"
+
+    def _get_encoding(self):
+        """Lazily load tiktoken encoding; returns None if tiktoken unavailable."""
+        if self._encoding is None:
+            try:
+                import tiktoken
+
+                self._encoding = tiktoken.get_encoding(self._encoding_name)
+            except ImportError:
+                self._encoding = None
+        return self._encoding
 
     def _count_tokens(self, text: str) -> int:
-        """Count tokens in text."""
-        return len(self._encoding.encode(text))
+            """Count tokens in text. Returns 0 if tiktoken unavailable."""
+            encoding = self._get_encoding()
+            if encoding is None:
+                # Fallback: ~1 token per 4 chars
+                return len(text) // 4 + 1
+            return len(encoding.encode(text))
 
     def get_budget(self) -> BudgetInfo:
         """Return current token budget breakdown."""
