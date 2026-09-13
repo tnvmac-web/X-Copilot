@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, dev]
+    branches: [main, dev, updatetest]
     tags: ['v*']
   pull_request:
     branches: [main, dev]
@@ -104,7 +104,7 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('desktop/src-tauri/Cargo.toml') }}
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build Tauri app
         run: npm run tauri build
@@ -135,7 +135,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Install frontend dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build Windows installer
         run: npm run tauri build -- --bundles nsis,msi
