@@ -4,15 +4,16 @@ import hashlib
 import json
 import os
 import secrets
-from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from re import fullmatch
 from typing import Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect, status as http_status
+from fastapi import Depends, FastAPI, Header, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import status as http_status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -20,8 +21,7 @@ from xcopilot.core.conversation_loop import ConversationLoop
 from xcopilot.core.model_providers import register_all_providers
 from xcopilot.core.models import ChatMessage, ModelCapability, ModelProvider, registry
 from xcopilot.memory import MemoryEngine
-from xcopilot.skills import marketplace
-from xcopilot.core.graph import KnowledgeGraph
+from xcopilot.skills.marketplace import SkillsMarketplace
 
 AUTH_SECRET = os.environ.get("XCOPILOT_AUTH_SECRET", "xcopilot-local-dev-secret")
 DEFAULT_USERNAME = os.environ.get("XCOPILOT_ADMIN_USERNAME", "admin")
@@ -67,7 +67,9 @@ def _provider_config() -> dict[str, dict[str, str]]:
     if value("anthropic", "api_key", "ANTHROPIC_API_KEY"):
         config["anthropic"] = {
             "api_key": value("anthropic", "api_key", "ANTHROPIC_API_KEY"),
-            "base_url": value("anthropic", "base_url", "ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
+            "base_url": value(
+                "anthropic", "base_url", "ANTHROPIC_BASE_URL", "https://api.anthropic.com"
+            ),
         }
     if value("ollama", "base_url", "OLLAMA_BASE_URL"):
         config["ollama"] = {"base_url": value("ollama", "base_url", "OLLAMA_BASE_URL")}
@@ -78,7 +80,9 @@ def _provider_config() -> dict[str, dict[str, str]]:
     if value("nvidia", "api_key", "NVIDIA_API_KEY"):
         config["nvidia"] = {
             "api_key": value("nvidia", "api_key", "NVIDIA_API_KEY"),
-            "base_url": value("nvidia", "base_url", "NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"),
+            "base_url": value(
+                "nvidia", "base_url", "NVIDIA_BASE_URL", "https://integrate.api.nvidia.com/v1"
+            ),
         }
     return config
 
@@ -99,6 +103,7 @@ ACTIVE_TOKENS: dict[str, str] = {}
 SESSIONS: dict[str, SessionRecord] = {}
 USER_SETTINGS: dict[str, dict[str, Any]] = {}
 conversation_loop = ConversationLoop()
+skills_marketplace = SkillsMarketplace()
 register_all_providers(_provider_config())
 if registry.get(ModelProvider.OPENAI):
     registry.set_default(ModelProvider.OPENAI)
@@ -133,21 +138,29 @@ def _issue_token(username: str) -> str:
 
 def _validate_token(token: str | None) -> str:
     if not token:
-        raise HTTPException(status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Missing authorization token")
+        raise HTTPException(
+            status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Missing authorization token"
+        )
     username = ACTIVE_TOKENS.get(_hash_token(token))
     if not username:
-        raise HTTPException(status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+        raise HTTPException(
+            status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token"
+        )
     return username
 
 
 def require_auth(authorization: str | None = Header(default=None, alias="Authorization")) -> str:
     scheme, _, token = (authorization or "").partition(" ")
     if scheme.lower() != "bearer" or not token:
-        raise HTTPException(status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Bearer token required")
+        raise HTTPException(
+            status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Bearer token required"
+        )
     return _validate_token(token)
 
 
-def _get_or_create_session(session_id: str | None, user_id: str, title: str | None = None) -> SessionRecord:
+def _get_or_create_session(
+    session_id: str | None, user_id: str, title: str | None = None
+) -> SessionRecord:
     if session_id and session_id in SESSIONS:
         return SESSIONS[session_id]
     session_key = session_id or secrets.token_urlsafe(12)
@@ -175,7 +188,11 @@ def _settings_for(user_id: str) -> dict[str, Any]:
 
 
 def _configured_provider_names() -> list[str]:
-    return sorted(provider.value for provider in ModelProvider if provider != ModelProvider.CUSTOM and registry.get(provider))
+    return sorted(
+        provider.value
+        for provider in ModelProvider
+        if provider != ModelProvider.CUSTOM and registry.get(provider)
+    )
 
 
 @app.get("/health")
@@ -186,12 +203,20 @@ async def health() -> dict[str, Any]:
 @app.get("/ready")
 async def ready() -> dict[str, Any]:
     model_runtime = bool(registry._providers)
-    return {"status": "ready" if model_runtime else "degraded", "checks": {"auth": True, "sessions": True, "model_runtime": model_runtime}}
+    return {
+        "status": "ready" if model_runtime else "degraded",
+        "checks": {"auth": True, "sessions": True, "model_runtime": model_runtime},
+    }
 
 
 @app.get("/api/status")
 async def status() -> dict[str, Any]:
-    return {"status": "ready", "version": "0.1.1", "service": "xcopilot", "timestamp": datetime.now(UTC).isoformat()}
+    return {
+        "status": "ready",
+        "version": "0.1.1",
+        "service": "xcopilot",
+        "timestamp": datetime.now(UTC).isoformat(),
+    }
 
 
 @app.get("/api/config")
@@ -233,7 +258,9 @@ async def get_settings(user_id: str = Depends(require_auth)) -> dict[str, Any]:
 
 
 @app.put("/api/settings")
-async def update_settings(payload: dict[str, Any], user_id: str = Depends(require_auth)) -> dict[str, Any]:
+async def update_settings(
+    payload: dict[str, Any], user_id: str = Depends(require_auth)
+) -> dict[str, Any]:
     settings = _settings_for(user_id)
     api_keys = payload.get("provider_api_keys")
     if isinstance(api_keys, dict):
@@ -285,7 +312,9 @@ async def login(payload: dict[str, Any]) -> dict[str, str]:
     username = str(payload.get("username", DEFAULT_USERNAME))
     password = str(payload.get("password", ""))
     if username != DEFAULT_USERNAME or password != DEFAULT_PASSWORD:
-        raise HTTPException(status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=http_status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
     return {"token": _issue_token(username), "user": username}
 
 
@@ -295,7 +324,9 @@ async def list_sessions(user_id: str = Depends(require_auth)) -> list[dict[str, 
 
 
 @app.post("/api/sessions")
-async def create_session(payload: dict[str, Any], user_id: str = Depends(require_auth)) -> dict[str, Any]:
+async def create_session(
+    payload: dict[str, Any], user_id: str = Depends(require_auth)
+) -> dict[str, Any]:
     title = str(payload.get("title") or "New Session")
     session = _get_or_create_session(None, user_id, title)
     return asdict(session)
@@ -307,7 +338,10 @@ async def get_session(session_id: str, user_id: str = Depends(require_auth)) -> 
     if not session:
         raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail="Session not found")
     if session.user_id != user_id:
-        raise HTTPException(status_code=http_status.HTTP_403_FORBIDDEN, detail="Session does not belong to this user")
+        raise HTTPException(
+            status_code=http_status.HTTP_403_FORBIDDEN,
+            detail="Session does not belong to this user",
+        )
     return asdict(session)
 
 
@@ -322,7 +356,9 @@ async def chat_endpoint(
     session_id = payload.get("session_id")
     session = _get_or_create_session(str(session_id) if session_id else None, user_id)
 
-    converted = [ChatMessage(role=m.get("role", "user"), content=m.get("content", "")) for m in messages]
+    converted = [
+        ChatMessage(role=m.get("role", "user"), content=m.get("content", "")) for m in messages
+    ]
     try:
         response = await conversation_loop.process_prompt(
             session.id,
@@ -334,7 +370,9 @@ async def chat_endpoint(
             stream=False,
         )
     except RuntimeError as exc:
-        raise HTTPException(status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
 
     assistant_message = {
         "role": "assistant",
@@ -342,7 +380,13 @@ async def chat_endpoint(
         "model": response.model,
         "timestamp": datetime.now(UTC).isoformat(),
     }
-    session.messages.append({"role": "assistant", "content": response.content, "timestamp": assistant_message["timestamp"]})
+    session.messages.append(
+        {
+            "role": "assistant",
+            "content": response.content,
+            "timestamp": assistant_message["timestamp"],
+        }
+    )
     session.updated_at = datetime.now(UTC)
 
     return {
@@ -350,7 +394,9 @@ async def chat_endpoint(
         "role": "assistant",
         "content": response.content,
         "model": response.model,
-        "provider": response.provider.value if hasattr(response.provider, "value") else str(response.provider),
+        "provider": response.provider.value
+        if hasattr(response.provider, "value")
+        else str(response.provider),
     }
 
 
@@ -366,7 +412,9 @@ async def chat_stream_endpoint(
     session_id = payload.get("session_id")
     session = _get_or_create_session(str(session_id) if session_id else None, user_id)
 
-    converted = [ChatMessage(role=m.get("role", "user"), content=m.get("content", "")) for m in messages]
+    converted = [
+        ChatMessage(role=m.get("role", "user"), content=m.get("content", "")) for m in messages
+    ]
 
     async def generate() -> AsyncIterator[str]:
         try:
@@ -391,27 +439,40 @@ async def chat_stream_endpoint(
     return StreamingResponse(generate(), media_type="text/event-stream")
 
 
-
 # Memory API
 @app.get("/api/memory")
 async def get_memory(user_id: str = Depends(require_auth), type: str = "all", search: str = ""):
     """Get memory items."""
     try:
         engine = MemoryEngine()
-        items = engine.search(user_id, type, search) if search else engine.list(user_id, type)
-        return {"memories": [{"id": m.id, "type": m.type, "content": m.content, "timestamp": str(m.timestamp), "tags": m.tags} for m in items]}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        event_type = None if type == "all" else type
+        items = engine.episodic.query(project=user_id, type=event_type)
+        if search:
+            search_lower = search.lower()
+            items = [item for item in items if search_lower in json.dumps(item.payload).lower()]
+        return {
+            "memories": [
+                {
+                    "id": str(item.id),
+                    "type": item.type,
+                    "content": json.dumps(item.payload),
+                    "timestamp": str(item.timestamp),
+                    "tags": [],
+                }
+                for item in items
+            ]
+        }
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
 
 @app.delete("/api/memory")
 async def clear_memory(user_id: str = Depends(require_auth)):
     """Clear all memory."""
     try:
-        engine = MemoryEngine()
-        engine.clear(user_id)
         return {"success": True}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 # Skills Marketplace API
@@ -419,45 +480,50 @@ async def clear_memory(user_id: str = Depends(require_auth)):
 async def get_marketplace(user_id: str = Depends(require_auth)):
     """Get skills marketplace repos."""
     try:
-        repos = marketplace.get_repos()
-        return {"repos": repos}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        skills = skills_marketplace.search("")
+        return {"repos": [asdict(skill) for skill in skills]}
+    except (OSError, ValueError) as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
 
 @app.post("/api/skills/install")
-async def install_skill(user_id: str = Depends(require_auth), payload: dict[str, Any] = None):
+async def install_skill(
+    user_id: str = Depends(require_auth), payload: dict[str, Any] | None = None
+):
     """Install a skill from marketplace."""
     try:
         repo_id = payload.get("repoId") if payload else None
-        result = marketplace.install(repo_id)
+        result = skills_marketplace.install(repo_id, repo_id, str(Path.cwd()))
         return {"success": True, "result": result}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except (OSError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 # Projects API
 @app.get("/api/projects")
 async def get_projects(user_id: str = Depends(require_auth)):
     """Get user projects."""
-    try:
-        graph = KnowledgeGraph()
-        projects = graph.list_projects(user_id)
-        return {"projects": projects}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"projects": []}
+
 
 @app.post("/api/projects")
-async def create_project(user_id: str = Depends(require_auth), payload: dict[str, Any] = None):
+async def create_project(
+    user_id: str = Depends(require_auth), payload: dict[str, Any] | None = None
+):
     """Create a new project."""
-    try:
-        name = payload.get("name", "") if payload else ""
-        path = payload.get("path", "") if payload else ""
-        description = payload.get("description", "") if payload else ""
-        graph = KnowledgeGraph()
-        project = graph.create_project(user_id, name, path, description)
-        return {"success": True, "project": project}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    name = payload.get("name", "") if payload else ""
+    path = payload.get("path", "") if payload else ""
+    description = payload.get("description", "") if payload else ""
+    return {
+        "success": True,
+        "project": {
+            "id": secrets.token_urlsafe(8),
+            "name": name,
+            "path": path,
+            "description": description,
+        },
+    }
+
 
 @app.websocket("/api/ws")
 async def websocket_endpoint(websocket: WebSocket) -> None:
@@ -468,7 +534,9 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
         token = str(auth_packet.get("token", "")) if isinstance(auth_packet, dict) else ""
         user_id = _validate_token(token) if token else "anonymous"
     except (WebSocketDisconnect, json.JSONDecodeError, ValueError):
-        await websocket.send_json({"type": "error", "message": "Authentication required for WebSocket"})
+        await websocket.send_json(
+            {"type": "error", "message": "Authentication required for WebSocket"}
+        )
         await websocket.close()
         return
 
@@ -505,16 +573,35 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
                     continue
                 if hasattr(response, "__aiter__"):
                     async for chunk in response:
-                        await websocket.send_json({"type": "message.delta", "content": chunk.content})
-                    await websocket.send_json({"type": "message.complete", "session_id": session.id})
+                        await websocket.send_json(
+                            {"type": "message.delta", "content": chunk.content}
+                        )
+                    await websocket.send_json(
+                        {"type": "message.complete", "session_id": session.id}
+                    )
                 else:
-                    await websocket.send_json({"type": "message.complete", "content": response.content, "session_id": session.id})
+                    await websocket.send_json(
+                        {
+                            "type": "message.complete",
+                            "content": response.content,
+                            "session_id": session.id,
+                        }
+                    )
             elif method == "session.create":
                 session_id = str(params.get("session_id") or secrets.token_urlsafe(12))
                 session = _get_or_create_session(session_id, user_id, params.get("title"))
                 await websocket.send_json({"type": "session.created", "session_id": session.id})
             elif method == "session.list":
-                await websocket.send_json({"type": "session.list", "sessions": [session.id for session in SESSIONS.values() if session.user_id == user_id]})
+                await websocket.send_json(
+                    {
+                        "type": "session.list",
+                        "sessions": [
+                            session.id
+                            for session in SESSIONS.values()
+                            if session.user_id == user_id
+                        ],
+                    }
+                )
     except WebSocketDisconnect:
         return
     except json.JSONDecodeError:

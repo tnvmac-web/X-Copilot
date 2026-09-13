@@ -5,6 +5,7 @@ import { FolderPlus, FolderOpen, Plus, ChevronRight, FileText, Trash2 } from "lu
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { authHeaders } from "@/lib/api-client";
 
 interface Project {
   id: string;
@@ -25,7 +26,7 @@ export default function ProjectsPage() {
     try {
       await fetch("/api/projects", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           name: newProjectName,
           path: newProjectPath,
@@ -43,7 +44,7 @@ export default function ProjectsPage() {
 
   const deleteProject = async (projectId: string) => {
     try {
-      await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
+      await fetch(`/api/projects/${projectId}`, { method: "DELETE", headers: authHeaders() });
       setProjects(projects.filter((p) => p.id !== projectId));
     } catch (error) {
       console.error("Failed to delete project:", error);

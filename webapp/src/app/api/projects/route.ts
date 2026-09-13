@@ -5,10 +5,13 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_XCOPILOT_API_URL ||
   "http://127.0.0.1:8000";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/projects`, {
       cache: "no-store",
+      headers: request.headers.get("authorization")
+        ? { Authorization: request.headers.get("authorization") as string }
+        : {},
     });
 
     if (!response.ok) {
@@ -32,7 +35,12 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(`${API_BASE_URL}/api/projects`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(request.headers.get("authorization")
+          ? { Authorization: request.headers.get("authorization") as string }
+          : {}),
+      },
       body: JSON.stringify({ name, path, description }),
     });
 

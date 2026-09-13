@@ -5,6 +5,7 @@ import { Search, Puzzle, Download, Zap, Star } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { authHeaders } from "@/lib/api-client";
 
 interface SkillRepo {
   id: string;
@@ -27,7 +28,7 @@ export default function MarketplacePage() {
 
   const fetchMarketplace = async () => {
     try {
-      const response = await fetch("/api/skills/marketplace");
+      const response = await fetch("/api/skills/marketplace", { headers: authHeaders() });
       if (response.ok) {
         const data = await response.json();
         setRepos(data.repos || []);
@@ -43,7 +44,7 @@ export default function MarketplacePage() {
     try {
       await fetch(`/api/skills/install`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ repoId }),
       });
       fetchMarketplace();

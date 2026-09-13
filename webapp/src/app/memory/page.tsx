@@ -5,6 +5,7 @@ import { Brain, FileText, Search, Clock, Trash2, RefreshCw } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { authHeaders } from "@/lib/api-client";
 
 interface MemoryItem {
   id: string;
@@ -27,7 +28,7 @@ export default function MemoryPage() {
   const fetchMemories = async () => {
     try {
       const params = new URLSearchParams({ type: filter, search: searchQuery });
-      const response = await fetch(`/api/memory?${params}`);
+      const response = await fetch(`/api/memory?${params}`, { headers: authHeaders() });
       if (response.ok) {
         const data = await response.json();
         setMemories(data.memories || []);
@@ -41,7 +42,7 @@ export default function MemoryPage() {
 
   const clearMemories = async () => {
     try {
-      await fetch("/api/memory", { method: "DELETE" });
+      await fetch("/api/memory", { method: "DELETE", headers: authHeaders() });
       setMemories([]);
     } catch (error) {
       console.error("Failed to clear memories:", error);

@@ -36,7 +36,7 @@ class TestServerRoutes:
         with open(server_path) as f:
             source = f.read()
         assert "from xcopilot.memory import MemoryEngine" in source
-        assert "from xcopilot.skills import marketplace" in source
+        assert "from xcopilot.skills.marketplace import SkillsMarketplace" in source
 
     def test_server_has_all_expected_routes(self):
         server_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "server", "main.py")

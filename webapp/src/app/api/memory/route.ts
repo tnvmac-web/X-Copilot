@@ -13,7 +13,12 @@ export async function GET(request: NextRequest) {
 
     const response = await fetch(
       `${API_BASE_URL}/api/memory?type=${type}&search=${search}`,
-      { cache: "no-store" }
+      {
+        cache: "no-store",
+        headers: request.headers.get("authorization")
+          ? { Authorization: request.headers.get("authorization") as string }
+          : {},
+      }
     );
 
     if (!response.ok) {
@@ -30,10 +35,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
     const response = await fetch(`${API_BASE_URL}/api/memory`, {
       method: "DELETE",
+      headers: request.headers.get("authorization")
+        ? { Authorization: request.headers.get("authorization") as string }
+        : {},
     });
 
     if (!response.ok) {
