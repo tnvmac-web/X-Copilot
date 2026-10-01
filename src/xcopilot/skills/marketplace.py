@@ -105,9 +105,23 @@ Refer to: https://github.com/{repo}/tree/main/skills/{skill_name}
 
     def list_marketplace(self) -> list[MarketplaceSkill]:
         """List all available skills from all repos."""
-        all_skills = []
+        all_skills: list[MarketplaceSkill] = []
+        seen: set[tuple[str, str]] = set()
         for repo in self.REPOS:
-            all_skills.extend(self._mock_search(repo.split("/")[-1]))
+            # Use the repo's short name as the query; empty matches are dropped.
+            for skill in self._mock_search(repo.split("/")[-1]):
+                key = (skill.repo, skill.name)
+                if key not in seen:
+                    seen.add(key)
+                    all_skills.append(skill)
+        # Fall back to the full catalogue so browsing is never empty.
+        if not all_skills:
+            for query in ("code", "debug", "deploy", "review", "test", "refactor"):
+                for skill in self._mock_search(query):
+                    key = (skill.repo, skill.name)
+                    if key not in seen:
+                        seen.add(key)
+                        all_skills.append(skill)
         return all_skills
 
     def export(self) -> str:

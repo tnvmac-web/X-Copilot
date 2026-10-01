@@ -1,0 +1,42 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Python
+.venv
+venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+.coverage
+coverage.xml
+htmlcov
+dist
+build
+
+# Node
+node_modules
+**/node_modules
+.next
+**/.next
+webapp/tsconfig.tsbuildinfo
+desktop/dist
+desktop/src-tauri/target
+
+# Runtime data
+.xcopilot
+.hermes
+
+# Docs / editor / OS
+docs
+*.md
+!README.md
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.log

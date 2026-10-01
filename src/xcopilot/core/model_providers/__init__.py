@@ -30,6 +30,50 @@ PROVIDER_API_MODES = {
 }
 
 
+def _resolve_provider(value: str):
+    """Map a provider name from config onto a ModelProvider enum member."""
+    from xcopilot.core.models import ModelProvider
+
+    try:
+        return ModelProvider(str(value).strip().lower())
+    except ValueError:
+        return None
+
+
+def _apply_routing(config: dict) -> None:
+    """Apply the configured default provider and fallback chain to the registry.
+
+    The registry needs an explicit routing order: `chat_with_fallback()` only
+    walks the default provider plus the fallback chain, so registering providers
+    without applying routing makes every chat request fail. Falls back to the
+    first registered provider when no default is configured.
+    """
+    from xcopilot.core.models import ModelProvider, registry
+
+    default = _resolve_provider(config.get("default", ""))
+    if default is not None and registry.get(default) is not None:
+        registry.set_default(default)
+
+    chain = [
+        provider
+        for provider in (_resolve_provider(name) for name in config.get("fallback_chain", []))
+        if provider is not None
+    ]
+    if chain:
+        registry.set_fallback_chain(chain)
+
+    # No usable default: prefer a local provider, else the first registered one,
+    # so single-provider setups still route without extra configuration.
+    if registry._default_provider is None and registry._providers:
+        local = (
+            ModelProvider.OLLAMA
+            if registry.get(ModelProvider.OLLAMA)
+            else ModelProvider.LMSTUDIO
+        )
+        fallback = local if registry.get(local) else next(iter(registry._providers))
+        registry.set_default(fallback)
+
+
 def register_all_providers(config: dict | None = None) -> None:
     """Register all available model providers."""
     config = config or {}
@@ -47,6 +91,11 @@ def register_all_providers(config: dict | None = None) -> None:
         register_openrouter(config["openrouter"])
     if config.get("nvidia"):
         register_nvidia(config["nvidia"])
+
+    # Apply the configured default provider and fallback chain. Without this the
+    # registry has providers but no routing order, so chat_with_fallback() tries
+    # nothing and every request fails with "No provider available for model X".
+    _apply_routing(config)
 
     # Auto-register Ollama and LM Studio if running (no API key needed)
     # This allows local models to work out of the box

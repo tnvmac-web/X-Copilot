@@ -106,15 +106,43 @@ class PermissionPipeline:
             for pattern in DESTRUCTIVE_PATTERNS:
                 if re.search(pattern, cmd, re.IGNORECASE):
                     return True
+            # Destructive commands aimed at protected production paths must be
+            # blocked too: "rm -rf C:\Windows\System32" does not match any
+            # DESTRUCTIVE_PATTERN, so without this check it only reached ASK.
+            if re.search(r"\b(rm|del|rmdir|format)\b", cmd) and self._targets_production_path(
+                cmd
+            ):
+                return True
 
         # File deletion in production paths
         if action == PermissionAction.DELETE_FILE:
             path = context.get("path", "")
+            normalized_path = self._normalize_path_text(path)
             for prod_path in PRODUCTION_PATHS:
-                if path.startswith(prod_path):
+                if self._normalize_path_text(prod_path) in normalized_path:
                     return True
 
         return False
+
+    @staticmethod
+    def _normalize_path_text(text: str) -> str:
+        """Normalize a path/command for protected-path matching.
+
+        PRODUCTION_PATHS entries are written regex-style with escaped
+        backslashes ("C:\\\\Windows\\\\"), so a plain `in`/`startswith` comparison
+        never matches a real command. Collapse repeated backslashes and unify
+        separators before comparing.
+        """
+        unified = text.replace("/", "\\")
+        collapsed = re.sub(r"\\+", r"\\", unified)
+        return collapsed.lower()
+
+    def _targets_production_path(self, command: str) -> bool:
+        """Return True when a shell command references a protected path."""
+        normalized = self._normalize_path_text(command)
+        return any(
+            self._normalize_path_text(prod_path) in normalized for prod_path in PRODUCTION_PATHS
+        )
 
     def _mode_decision(self, action: PermissionAction, context: dict) -> PermissionResult:
         """Make decision based on current mode."""

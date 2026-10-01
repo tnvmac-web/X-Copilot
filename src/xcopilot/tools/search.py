@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import urllib.parse
 from pathlib import Path
 
 from xcopilot.tools.web import WebTool
@@ -79,7 +80,10 @@ class SearchTool:
     def web_search(self, query: str, limit: int = 5) -> list[dict]:
         """Search the web using DuckDuckGo HTML."""
         try:
-            results = self.web.fetch(f"https://html.duckduckgo.com/html/?q={query}")
+            # The query must be URL-encoded: raw spaces make the URL invalid and
+            # every multi-word search raises InvalidURL instead of returning hits.
+            encoded = urllib.parse.quote_plus(query)
+            results = self.web.fetch(f"https://html.duckduckgo.com/html/?q={encoded}")
             # Parse HTML results
             import re
 
@@ -89,5 +93,5 @@ class SearchTool:
                 re.DOTALL,
             )
             return [{"snippet": item.strip()} for item in items[:limit]]
-        except ConnectionError:
+        except (ConnectionError, ValueError):
             return []

@@ -71,21 +71,31 @@ clone_repo() {
 install_python_pkg() {
     log "Installing X-Copilot Python package..."
     cd "$INSTALL_PATH"
-    python3 -m pip install --upgrade pip
-    python3 -m pip install -e ".[dev]"
+    # PEP 668: modern distros refuse system-wide pip installs. Use a venv so the
+    # one-line installer works on Debian 12+, Ubuntu 23.04+, Fedora, and Arch.
+    if [[ ! -d ".venv" ]]; then
+        python3 -m venv .venv || error "Failed to create virtual environment (install python3-venv)"
+    fi
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    python -m pip install --upgrade pip
+    python -m pip install -e ".[dev]"
+    deactivate
+    ln -sf "$INSTALL_PATH/.venv/bin/xcopilot" "$HOME/.local/bin/xcopilot" 2>/dev/null || true
 }
 
 install_webapp() {
     log "Setting up WebApp..."
     cd "$INSTALL_PATH/webapp"
-    npm ci
+    npm ci --no-audit --no-fund
+    npx prisma generate 2>/dev/null || true
     npm run build
 }
 
 install_desktop() {
     log "Setting up Desktop App..."
     cd "$INSTALL_PATH/desktop"
-    npm ci
+    npm ci --no-audit --no-fund
     if check_cmd cargo; then
         npm run tauri build
     else
@@ -102,7 +112,7 @@ create_desktop_entries() {
 [Desktop Entry]
 Name=X-Copilot CLI
 Comment=Self-growing AI agent terminal
-Exec=bash -c "cd '$INSTALL_PATH' && python -m xcopilot.cli.main start --test-mode"
+Exec=bash -c "cd '$INSTALL_PATH' && source .venv/bin/activate && xcopilot start --test-mode"
 Terminal=true
 Type=Application
 Categories=Development;
@@ -122,7 +132,11 @@ EOF
 verify_install() {
     log "Verifying installation..."
     cd "$INSTALL_PATH"
-    python -m xcopilot.cli.main doctor
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
+    xcopilot --version
+    xcopilot doctor
+    deactivate
 }
 
 main() {

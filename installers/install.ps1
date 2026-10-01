@@ -67,7 +67,7 @@ function Install-WingetPackage {
         winget install --id $PackageId --accept-source-agreements --accept-package-agreements --silent
         Write-Success "$Name installed"
     } catch {
-        Write-Error "Failed to install $Name: $_"
+        Write-Error "Failed to install ${Name}: $_"
         throw
     }
 }
@@ -142,8 +142,14 @@ function Install-PythonPackage {
     Write-Log "Installing X-Copilot Python package..."
     Set-Location $ProjectDir
     try {
-        python -m pip install --upgrade pip
-        python -m pip install -e ".[dev]"
+        # Use a venv so the install never touches the system Python and the
+        # `xcopilot` entry point lands somewhere we can put on PATH reliably.
+        if (-not (Test-Path ".venv")) {
+            python -m venv .venv
+        }
+        $venvPython = Join-Path $ProjectDir ".venv\Scripts\python.exe"
+        & $venvPython -m pip install --upgrade pip
+        & $venvPython -m pip install -e ".[dev]"
         Write-Success "Python package installed"
     } catch {
         Write-Error "Failed to install Python package: $_"
@@ -213,7 +219,7 @@ function Create-Shortcuts {
     $shell = New-Object -ComObject WScript.Shell
     $shortcut = $shell.CreateShortcut($cliShortcut)
     $shortcut.TargetPath = "powershell.exe"
-    $shortcut.Arguments = "-NoExit -Command \"cd '$ProjectDir'; python -m xcopilot.cli.main start --test-mode\""
+    $shortcut.Arguments = '-NoExit -Command "cd ''{0}''; python -m xcopilot.cli.main start --test-mode"' -f $ProjectDir
     $shortcut.WorkingDirectory = $ProjectDir
     $shortcut.IconLocation = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
     $shortcut.Save()
@@ -256,9 +262,9 @@ function Setup-ShellIntegration {
         Write-Success "Added X-Copilot to user PATH"
     }
     
-    # Create xcopilot.bat for global command
+    # Create xcopilot.bat that uses the venv interpreter, not the system one
     $batPath = Join-Path $xcopilotBin "xcopilot.bat"
-    $batContent = "@echo off`ncd /d `"$ProjectDir`"`npython -m xcopilot.cli.main %*"
+    $batContent = "@echo off`n`"$xcopilotBin\python.exe`" -m xcopilot.cli.main %*"
     Set-Content -Path $batPath -Value $batContent
     Write-Success "Global xcopilot command created"
 }
@@ -269,7 +275,8 @@ function Verify-Installation {
     Set-Location $ProjectDir
     
     try {
-        $result = python -m xcopilot.cli.main doctor 2>&1
+        $venvPython = Join-Path $ProjectDir ".venv\Scripts\python.exe"
+        $result = & $venvPython -m xcopilot.cli.main doctor 2>&1
         Write-Success "Doctor check passed"
         Write-Host $result
     } catch {

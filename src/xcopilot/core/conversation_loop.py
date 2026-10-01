@@ -37,12 +37,17 @@ class ConversationLoop:
 
         history = self._sessions.setdefault(session_id, [])
         history.extend(messages)
-        request_messages = messages
+        # Send the accumulated conversation, not just the newest turn: sending
+        # only `messages` drops all prior context, so follow-up questions like
+        # "what is my name?" can never be answered from the session history.
+        request_messages: list[ChatMessage] = list(history)
         if context_mode == "auto":
-            request_messages, max_tokens = await self._fit_context(messages, model, max_tokens)
+            request_messages, max_tokens = await self._fit_context(
+                request_messages, model, max_tokens
+            )
 
         try:
-            return await registry.chat_with_fallback(
+            response = await registry.chat_with_fallback(
                 request_messages,
                 model,
                 temperature=temperature,
@@ -55,6 +60,13 @@ class ConversationLoop:
                 f"{type(exc).__name__}: {exc}. "
                 "Check the provider key, model ID, and backend connectivity."
             ) from exc
+
+        # Record the assistant turn so the next request carries the full
+        # conversation (user + assistant), not just the user messages.
+        content = getattr(response, "content", None)
+        if isinstance(content, str) and content:
+            history.append(ChatMessage(role="assistant", content=content))
+        return response
 
     async def _fit_context(
         self,

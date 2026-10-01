@@ -56,6 +56,9 @@ console_scripts = { "xcopilot" = "xcopilot.cli.main:cli" }
 where = ["src", "."]
 include = ["xcopilot*", "server*"]
 
+[tool.setuptools.package-data]
+xcopilot = ["skills/**/SKILL.md", "**/*.md"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

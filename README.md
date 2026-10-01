@@ -4,6 +4,64 @@ X-Copilot is a Python 3.11+ command-line agent for Windows and Linux. It
 provides project memory, skills, checkpoints, permissions, context budgeting,
 and shell/file/search/web tools.
 
+## Quick Install (One Line)
+
+Copy one line into your terminal. Each installer fetches the `dev` branch,
+installs Python/Node/Rust dependencies it needs, sets up the CLI, WebApp, and
+Desktop app, then runs a diagnostics check.
+
+**Windows (PowerShell)**
+
+```powershell
+irm https://raw.githubusercontent.com/tnvmac-web/X-Copilot/dev/installers/install.ps1 | iex
+```
+
+**Linux / macOS (bash)**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/tnvmac-web/X-Copilot/dev/installers/install.sh | bash
+```
+
+**Windows CMD (no PowerShell)**
+
+```cmd
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/tnvmac-web/X-Copilot/dev/installers/install.ps1 | iex"
+```
+
+**Just the CLI, from PyPI (no repo clone)**
+
+```bash
+pipx install x-copilot
+```
+
+```bash
+python -m pip install x-copilot
+```
+
+**Docker (server + WebApp)**
+
+```bash
+docker compose up -d
+```
+
+Installer options — the scripts accept these environment variables / flags:
+
+| Installer | Option | Default |
+|---|---|---|
+| `install.sh` | `INSTALL_PATH=...` | `~/.local/share/xcopilot` |
+| `install.sh` | `BRANCH=...` | `dev` |
+| `install.ps1` | `-InstallPath ...` | `%LOCALAPPDATA%\X-Copilot` |
+| `install.ps1` | `-Branch ...` | `dev` |
+| `install.ps1` | `-UserOnly`, `-SkipPython`, `-SkipNode`, `-SkipRust`, `-NoShortcuts` | off |
+
+After installing, restart your terminal so the `xcopilot` command is on `PATH`,
+then verify:
+
+```bash
+xcopilot --version
+xcopilot doctor
+```
+
 ## Requirements
 
 - Python 3.11 or newer

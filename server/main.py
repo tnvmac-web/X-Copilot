@@ -100,10 +100,6 @@ SESSIONS: dict[str, SessionRecord] = {}
 USER_SETTINGS: dict[str, dict[str, Any]] = {}
 conversation_loop = ConversationLoop()
 register_all_providers(_provider_config())
-if registry.get(ModelProvider.OPENAI):
-    registry.set_default(ModelProvider.OPENAI)
-elif registry.get(ModelProvider.ANTHROPIC):
-    registry.set_default(ModelProvider.ANTHROPIC)
 
 
 @asynccontextmanager
