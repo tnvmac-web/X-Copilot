@@ -66,9 +66,7 @@ def _apply_routing(config: dict) -> None:
     # so single-provider setups still route without extra configuration.
     if registry._default_provider is None and registry._providers:
         local = (
-            ModelProvider.OLLAMA
-            if registry.get(ModelProvider.OLLAMA)
-            else ModelProvider.LMSTUDIO
+            ModelProvider.OLLAMA if registry.get(ModelProvider.OLLAMA) else ModelProvider.LMSTUDIO
         )
         fallback = local if registry.get(local) else next(iter(registry._providers))
         registry.set_default(fallback)

@@ -109,9 +109,7 @@ class PermissionPipeline:
             # Destructive commands aimed at protected production paths must be
             # blocked too: "rm -rf C:\Windows\System32" does not match any
             # DESTRUCTIVE_PATTERN, so without this check it only reached ASK.
-            if re.search(r"\b(rm|del|rmdir|format)\b", cmd) and self._targets_production_path(
-                cmd
-            ):
+            if re.search(r"\b(rm|del|rmdir|format)\b", cmd) and self._targets_production_path(cmd):
                 return True
 
         # File deletion in production paths
